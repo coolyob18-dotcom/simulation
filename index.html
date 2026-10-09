@@ -1,601 +1,121 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motorsport Racer Career 2026</title>
-    <style>
-        :root {
-            --bg: #0f0f12;
-            --panel: #1a1a1e;
-            --border: #2a2a30;
-            --text: #e0e0e0;
-            --accent: #e10600;
-            --green: #00ff88;
-            --yellow: #ffaa00;
-            --red: #ff3b3b;
-            --blue: #00aaff;
-            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: var(--font);
-            display: flex;
-            justify-content: center;
-            padding: 10px;
-            min-height: 100vh;
-        }
-        #app {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 15px;
-            background: var(--panel);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-        .header h1 { font-size: 1.2rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        .header .race-info { font-size: 0.8rem; color: #888; }
-        
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-        }
-        .card-title {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            color: #888;
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
-        }
-
-        /* Setup Screen */
-        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-        .input-group label { font-size: 0.85rem; color: #aaa; }
-        .input-group input, .input-group select {
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: #111;
-            color: #fff;
-            font-size: 1rem;
-        }
-        .btn {
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: 0.2s;
-            text-transform: uppercase;
-        }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-primary:hover { background: #c00500; }
-        .btn-secondary { background: #2a2a30; color: #e0e0e0; border: 1px solid #444; }
-        .btn-secondary:hover { background: #333; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .stat-item {
-            background: #111;
-            padding: 8px 12px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-        }
-        .stat-item .label { color: #888; }
-        .stat-item .value { font-weight: 700; color: #fff; }
-
-        /* Log */
-        .log {
-            height: 220px;
-            overflow-y: auto;
-            background: #08080a;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            line-height: 1.4;
-            margin-bottom: 12px;
-        }
-        .log p { margin-bottom: 4px; }
-        .log .highlight { color: var(--yellow); }
-        .log .success { color: var(--green); }
-        .log .danger { color: var(--red); }
-        .log .info { color: var(--blue); }
-
-        /* Mode Buttons */
-        .mode-buttons { display: flex; gap: 8px; margin-bottom: 12px; }
-        .mode-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: #111;
-            color: #888;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.8rem;
-        }
-        .mode-btn.active-safe { background: rgba(0,255,136,0.1); border-color: var(--green); color: var(--green); }
-        .mode-btn.active-balanced { background: rgba(255,170,0,0.1); border-color: var(--yellow); color: var(--yellow); }
-        .mode-btn.active-aggressive { background: rgba(255,59,59,0.1); border-color: var(--red); color: var(--red); }
-
-        .action-buttons { display: flex; gap: 8px; }
-        .action-buttons .btn { flex: 1; }
-        
-        .hidden { display: none !important; }
-        
-        /* Table */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { color: #888; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
-        .player-row { background: rgba(225,6,0,0.1); }
-        .rival-row { background: rgba(0,170,255,0.1); }
-
-        .trophies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .trophy-badge {
-            background: #2a2a30;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            border: 1px solid #444;
-            color: var(--yellow);
-        }
-    </style>
-</head>
-<body>
-<div id="app">
-
-    <!-- SETUP SCREEN -->
-    <div id="setup-screen">
-        <div class="header">
-            <h1>MRC 2026</h1>
-            <div class="race-info">Новая карьера</div>
-        </div>
-        <div class="card">
-            <div class="card-title">Создание пилота</div>
-            <div class="input-group">
-                <label>Имя пилота</label>
-                <input type="text" id="p-name" placeholder="Введите имя" value="Никита">
-                
-                <label>Национальность</label>
-                <select id="p-nat">
-                    <option>Россия</option><option>Германия</option><option>Великобритания</option>
-                    <option>Италия</option><option>Испания</option><option>Франция</option>
-                    <option>Нидерланды</option><option>США</option><option>Япония</option>
-                    <option>Австралия</option><option>Монако</option><option>Канада</option>
-                </select>
-
-                <label>Возраст (18-50)</label>
-                <input type="number" id="p-age" min="18" max="50" value="20">
-
-                <label>Команда</label>
-                <select id="p-team">
-                    <option value="Red Bull">Red Bull (95)</option>
-                    <option value="Ferrari">Ferrari (94)</option>
-                    <option value="Mercedes">Mercedes (93)</option>
-                    <option value="McLaren">McLaren (92)</option>
-                    <option value="Aston Martin">Aston Martin (88)</option>
-                    <option value="Alpine">Alpine (85)</option>
-                    <option value="Williams">Williams (84)</option>
-                    <option value="Haas">Haas (80)</option>
-                </select>
-            </div>
-            <button class="btn btn-primary" onclick="initCareer()">Начать карьеру</button>
-        </div>
-    </div>
-
-    <!-- GAME SCREEN -->
-    <div id="game-screen" class="hidden">
-        <div class="header">
-            <h1 id="ui-track">MRC 2026</h1>
-            <div class="race-info" id="ui-round">Раунд 1/24</div>
-        </div>
-
-        <!-- Stats Panel -->
-        <div class="stats-grid">
-            <div class="stat-item"><span class="label">Пилот:</span> <span class="value" id="ui-name">-</span></div>
-            <div class="stat-item"><span class="label">Команда:</span> <span class="value" id="ui-team">-</span></div>
-            <div class="stat-item"><span class="label">Позиция:</span> <span class="value" id="ui-pos">-</span></div>
-            <div class="stat-item"><span class="label">Двигатель:</span> <span class="value" id="ui-engine">100%</span></div>
-            <div class="stat-item"><span class="label">Режим:</span> <span class="value" id="ui-mode">BALANCED</span></div>
-            <div class="stat-item"><span class="label">Очки:</span> <span class="value" id="ui-points">0</span></div>
-        </div>
-
-        <!-- Trophy Room -->
-        <div class="card" style="padding: 10px 15px;">
-            <div class="card-title">Trophy Room</div>
-            <div class="trophies" id="ui-trophies"><span style="color:#666; font-size:0.8rem;">Пока нет трофеев</span></div>
-        </div>
-
-        <!-- Race Log -->
-        <div class="card">
-            <div class="card-title">Лог событий</div>
-            <div class="log" id="race-log"></div>
-
-            <!-- Mode Selector -->
-            <div class="mode-buttons" id="mode-selector">
-                <button class="mode-btn" id="btn-safe" onclick="setMode('SAFE')">SAFE 🛡️</button>
-                <button class="mode-btn" id="btn-balanced" onclick="setMode('BALANCED')">BALANCED ⚖️</button>
-                <button class="mode-btn" id="btn-aggressive" onclick="setMode('AGGRESSIVE')">AGGRESSIVE 🔥</button>
-            </div>
-
-            <!-- Actions -->
-            <div class="action-buttons" id="action-bar">
-                <button class="btn btn-primary" id="btn-quali" onclick="runQualifying()">Квалификация</button>
-                <button class="btn btn-primary hidden" id="btn-race" onclick="startRace()">Старт гонки</button>
-                <button class="btn btn-secondary hidden" id="btn-next" onclick="nextRound()">Следующий этап</button>
-            </div>
-        </div>
-
-        <!-- Championship Standings -->
-        <div class="card">
-            <div class="card-title">Чемпионат пилотов</div>
-            <div class="table-container">
-                <table id="standings-table">
-                    <thead><tr><th>Поз</th><th>Пилот</th><th>Команда</th><th>Очки</th><th>Поб.</th><th>GOAT</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>F1 Career</title>
+<style>
+:root{--bg:#0b0b0d;--c:#17171a;--r:#b0242f;--g:#6f9a8a;--y:#e0a33a;--m:#8a8a92}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:520px;padding:12px;background:var(--bg);color:#eee;font:15px system-ui,sans-serif}
+h1{margin:8px 0}
+.card{background:var(--c);border-radius:14px;padding:12px;margin:10px 0}
+.hd{display:flex;justify-content:space-between;align-items:center;background:var(--c);padding:10px 12px;border-radius:14px;gap:8px}
+.m,.hd span{color:var(--m);font-size:13px}
+button{font:inherit;background:#26262b;color:#eee;border:2px solid #333;border-radius:12px;padding:12px;width:100%;margin:5px 0;cursor:pointer}
+button.b{background:var(--r);border-color:var(--r);font-weight:700;font-size:17px}
+button.on{border-color:var(--y);background:#3a2f18}
+button.sf.on{border-color:var(--g);background:#1d2f28}
+button.ag.on{border-color:#e5533d;background:#3a1d18}
+input,select{font:inherit;width:100%;padding:10px;border-radius:10px;background:#0f0f11;color:#eee;border:1px solid #333;margin:4px 0 10px}
+.row{display:grid;grid-template-columns:30px 6px 52px 46px 34px 1fr;gap:6px;align-items:center;padding:6px 8px;font-weight:700}
+.row:nth-child(odd){background:#1c1c20}
+.row.me{background:#24403a!important}.row.el{color:#a33}
+.row .gp{text-align:right;color:var(--m)}
+.row i{display:block;height:20px;border-radius:3px}
+.pl{border:1px solid #5a4a22;border-radius:8px;padding:1px 6px;font-size:12px;color:var(--y);text-align:center;font-weight:400}
+#tbl,.tb{max-height:340px;overflow:auto;border-radius:12px;background:var(--c)}
+.modes{display:flex;gap:6px}.modes button{margin:0;padding:12px 4px;font-size:13px}
+.lights{display:flex;justify-content:space-around;background:var(--c);padding:22px 10px;border-radius:14px;margin:90px 0 14px}
+.lights i{width:48px;height:48px;border-radius:50%;background:#3a3d44}
+.lights i.on{background:#b04a4a}.lights i.g{background:var(--g)}
+.big{height:120px;font-size:30px;font-weight:800}
+.big.go{background:var(--g);border-color:var(--g);color:#fff}
+.st{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.st div{background:#0f0f11;border-radius:10px;padding:8px}
+.up{color:#6c9}.dn{color:#d55}
+</style></head><body><div id="app"></div>
 <script>
-// ==========================================
-// ЛОГИКА ИГРЫ
-// ==========================================
+const $=s=>document.querySelector(s),app=$('#app'),R=Math.random,rnd=(a,b)=>a+R()*(b-a),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const NAT=[["Россия","🇷🇺"],["Великобритания","🇬🇧"],["Германия","🇩🇪"],["Нидерланды","🇳🇱"],["Испания","🇪🇸"],["Италия","🇮🇹"],["Франция","🇫🇷"],["Финляндия","🇫🇮"],["Бразилия","🇧🇷"],["Австралия","🇦🇺"],["Канада","🇨🇦"],["США","🇺🇸"],["Мексика","🇲🇽"],["Япония","🇯🇵"],["Китай","🇨🇳"],["Таиланд","🇹🇭"],["Дания","🇩🇰"],["Монако","🇲🇨"],["Польша","🇵🇱"],["Венгрия","🇭🇺"],["Украина","🇺🇦"],["Беларусь","🇧🇾"],["Казахстан","🇰🇿"],["Аргентина","🇦🇷"],["Швеция","🇸🇪"],["Австрия","🇦🇹"],["Бельгия","🇧🇪"],["Индия","🇮🇳"],["Турция","🇹🇷"],["Новая Зеландия","🇳🇿"]];
+const TR=[["Австралия","🇦🇺"],["Китай","🇨🇳"],["Япония","🇯🇵"],["Бахрейн","🇧🇭"],["Саудовская Аравия","🇸🇦"],["Майами","🇺🇸"],["Монако","🇲🇨"],["Испания","🇪🇸"],["Канада","🇨🇦"],["Австрия","🇦🇹"],["Венгрия","🇭🇺"],["Бельгия","🇧🇪"],["Нидерланды","🇳🇱"],["Италия","🇮🇹"],["Азербайджан","🇦🇿"],["Сингапур","🇸🇬"],["США","🇺🇸"],["Мексика","🇲🇽"],["Бразилия","🇧🇷"],["Абу-Даби","🇦🇪"]];
+const TEAMS=[["Red Arrow","#c33",92],["Silver Wolf","#9ab",90],["Blue Bull","#35c",88],["Orange Fox","#e83",86],["Green Tide","#2a7",80],["Navy Star","#34a",76],["Gold Hawk","#cb4",72],["Pink Jet","#e6a",68],["Teal Fin","#3aa",64],["Grey Ghost","#888",60],["Black Moth","#555",56]];
+const CODES="VOR KRA MEN DUB SOL ARN BEL CAR DEN EVR FIN GRO HAL IVA JAN KOV LAR MOR NIK OST PAV".split(' ');
+const PTS=[25,18,15,12,10,8,6,4,2,1],WEAR=[.08,.16,.3],MM=[.94,1,1.06],COST=[2,8,5];
+let G,C,me,Q,Rc,ph=0,tgo=0,iv1,to1;
+const skillAge=a=>a<=30?58+(a-18):70-Math.max(0,a-33)*1.5;
+const save=()=>{try{localStorage.setItem('f1c',JSON.stringify(G))}catch(e){}};
+const perf=c=>c.skill*.4+c.car*.4+(50+cl(c.eng,0,100)/2)*MM[c.mode]*.2;
+const standing=()=>[...G.ai.map(d=>d.code),G.code].sort((a,b)=>(G.pts[b]||0)-(G.pts[a]||0));
+const hdr=()=>{const T=TR[G.race];return`<div class=hd><div>${T[1]} <b>${T[0]}</b><br><span>Гонка ${G.race+1}/20 · сезон ${G.year}</span></div><span>Обгоны: сложно</span></div>`};
+const pill=e=>`<div class=pl style="${e>=80?'color:var(--g);border-color:#2f4a40':''}">⚡${Math.round(e)}</div>`;
+const row=(p,c,gap,cls='',ch='')=>`<div class="row ${c.me?'me':''} ${cls}"><span>${p}</span><i style="background:${c.col}"></i><span>${c.code}</span>${pill(c.eng)}<span>${ch}</span><span class=gp>${gap}</span></div>`;
 
-class Driver {
-    constructor(name, nat, age, team, isPlayer = false) {
-        this.name = name;
-        this.nat = nat;
-        this.age = age;
-        this.team = team;
-        this.isPlayer = isPlayer;
-        
-        // Статистика
-        this.points = 0;
-        this.wins = 0;
-        this.podiums = 0;
-        this.poles = 0;
-        this.fastestLaps = 0;
-        this.dnfs = 0;
-        this.races = 0;
-        this.trophies = []; // Trophy Room
-        
-        // Двигатель
-        this.engine = 100.0;
-        this.engineChanges = 3;
-        
-        // Характеристики от возраста
-        if (age <= 20) {
-            this.skill = 65 + Math.random() * 10;
-            this.consistency = 55 + Math.random() * 15;
-            this.aggression = 75 + Math.random() * 15;
-        } else if (age <= 25) {
-            this.skill = 75 + Math.random() * 10;
-            this.consistency = 70 + Math.random() * 10;
-            this.aggression = 65 + Math.random() * 15;
-        } else if (age <= 30) {
-            this.skill = 85 + Math.random() * 10;
-            this.consistency = 80 + Math.random() * 10;
-            this.aggression = 60 + Math.random() * 15;
-        } else if (age <= 35) {
-            this.skill = 80 + Math.random() * 10;
-            this.consistency = 85 + Math.random() * 10;
-            this.aggression = 55 + Math.random() * 15;
-        } else {
-            this.skill = 70 + Math.random() * 10;
-            this.consistency = 85 + Math.random() * 10;
-            this.aggression = 40 + Math.random() * 15;
-        }
+function menu(){let s=null;try{s=localStorage.getItem('f1c')}catch(e){}
+app.innerHTML=`<h1>🏁 F1 Career</h1><p class=m>Карьера пилота Формулы-1. Выбери возраст от 18 до 50 и страну, управляй двигателем, выигрывай сезоны.</p>${s?'<button class=b onclick=load()>Продолжить карьеру</button>':''}<button class=b style="background:#26262b;border-color:#333" onclick=create()>Новая карьера</button>`}
+function load(){try{G=JSON.parse(localStorage.getItem('f1c'));G.race>=20?season():hub()}catch(e){create()}}
+function create(){app.innerHTML=`<h1>Новый пилот</h1><div class=card><label>Имя</label><input id=nm value="Алекс Иванов"><label>Возраст: <b id=av>25</b></label><input type=range id=ag min=18 max=50 value=25 oninput="hint()"><p class=m id=ht></p><label>Национальность</label><select id=nt>${NAT.map((n,i)=>`<option value=${i}>${n[1]} ${n[0]}</option>`).join('')}</select><button class=b onclick=begin()>Начать карьеру</button></div>`;hint()}
+function hint(){const a=+$('#ag').value;$('#av').textContent=a;$('#ht').textContent=`Скорость ${skillAge(a).toFixed(0)}. `+(a<27?'Молодой: быстро растёт.':a<=33?'Пик формы.':'Опытный, но скорость падает — нужны тренировки.')}
+function begin(){const a=+$('#ag').value,n=NAT[$('#nt').value],name=($('#nm').value.replace(/[<>&]/g,'').trim()||'Пилот');
+let code=name.replace(/[^a-zа-яё]/gi,'').slice(0,3).toUpperCase()||'YOU';if(CODES.includes(code))code='YOU';
+G={name,age:a,flag:n[1],nat:n[0],code,skill:skillAge(a),money:3,eng:100,carUp:0,team:10,race:0,season:1,year:2026,hist:[],pts:{},w:0,pod:0,titles:0,h:[0,0],tr:TEAMS.map(t=>t[2]),ai:CODES.map(c=>({code:c,skill:Math.round(rnd(62,92)),team:0,eng:100}))};
+assign();hub()}
+function assign(){const s=[];TEAMS.forEach((t,i)=>s.push(i,i));s.splice(s.indexOf(G.team),1);G.ai.forEach((d,i)=>d.team=s[i]);
+const p=G.ai.filter(d=>d.team>=G.team-3&&d.team<=G.team);G.rival=(p.length?p:G.ai)[Math.floor(R()*(p.length||G.ai.length))].code;G.h=[0,0]}
+const myCar=()=>G.tr[G.team]+G.carUp;
+function cars(){const cs=G.ai.map(d=>({code:d.code,col:TEAMS[d.team][1],skill:d.skill,car:G.tr[d.team],eng:d.eng??100,mode:[0,1,1,1,2][Math.floor(R()*5)],ai:1,t:0}));
+me={code:G.code,col:'#fff',skill:G.skill,car:myCar(),eng:G.eng,mode:1,me:1,t:0};cs.push(me);return cs}
 
-        // Для гонки
-        this.currentPos = 1;
-        this.gridPos = 1;
-        this.raceTime = 0;
-        this.dnf = false;
-        this.mode = 'BALANCED';
-    }
+function hub(){save();const rk=standing().indexOf(G.code)+1;
+app.innerHTML=hdr()+`<div class=card><b>${G.flag} ${G.name}</b>, ${G.age} лет<br><span class=m>${G.hist.length?`Сезон ${G.hist[G.hist.length-1].y}: P${G.hist[G.hist.length-1].rk}, ${G.hist[G.hist.length-1].pt} оч.<br>`:''}${TEAMS[G.team][0]} · соперник сезона: ${G.rival} (${G.h[0]}:${G.h[1]})</span><div class=st><div>Скорость <b>${G.skill.toFixed(1)}</b></div><div>Машина <b>${myCar().toFixed(0)}</b></div><div>Двигатель <b>${G.eng.toFixed(0)}%</b></div><div>Деньги <b>$${G.money.toFixed(1)}M</b></div><div>Чемпионат <b>P${rk}</b></div><div>Очки <b>${G.pts[G.code]||0}</b></div></div></div>
+<div class=card><b>Боксы</b><button onclick=buy(0)>Ремонт двигателя +30% — $2M</button><button onclick=buy(1)>Улучшить машину +2 — $8M</button><button onclick=buy(2)>Тренировки: скорость +1 — $5M</button></div><button class=b onclick=quali()>К квалификации</button><button onclick=menu()>В меню</button>`}
+function buy(i){if(G.money<COST[i])return alert('Не хватает денег');G.money-=COST[i];if(i==0)G.eng=Math.min(100,G.eng+30);if(i==1)G.carUp+=2;if(i==2)G.skill=Math.min(99,G.skill+1);hub()}
 
-    getPerformance() {
-        let speedMult = 1.0, wearMult = 1.0, spinChance = 0.03;
-        if (this.mode === 'SAFE') { speedMult = 0.92; wearMult = 0.5; spinChance = 0.01; }
-        else if (this.mode === 'AGGRESSIVE') { speedMult = 1.10; wearMult = 2.0; spinChance = 0.08; }
+function quali(){C=cars();Q={st:0,pool:C.slice(),tails:[],res:null,mode:1,done:0};dq()}
+function dq(){const inP=Q.pool.includes(me),rs=Q.res;
+let list=rs?`<div class=tb>${rs.map((c,i)=>row(i+1,c,c.el?'ВЫЛЕТ':i?'+'+(c.q-rs[0].q).toFixed(3):'ПОУЛ',c.el?'el':'')).join('')}</div>`:'';
+let ctl;if(Q.done)ctl=`<button class=b onclick=toRace()>К гонке</button>`;
+else if(inP)ctl=`<div class=card><b>Режим двигателя</b> ${pill(me.eng)}<div class=modes>${['Безопасный','Баланс','Агрессивный'].map((n,i)=>`<button class="${['sf','','ag'][i]} ${Q.mode==i?'on':''}" onclick="Q.mode=${i};dq()">${n}</button>`).join('')}</div></div><button class=b onclick=runQ()>Запустить Q${Q.st+1}</button>`;
+else ctl=`<p class=m>Вы вылетели. Квалификация идёт без вас.</p><button class=b onclick=runQ()>Далее</button>`;
+app.innerHTML=hdr()+`<h2>${rs?'Результаты Q'+Q.st:'Квалификация'}</h2>${list}${ctl}`}
+function runQ(){const p=Q.pool,k=Q.st;if(p.includes(me)){me.eng=cl(me.eng-[.3,.6,1.2][Q.mode],0,100);G.eng=me.eng;me.mode=Q.mode}
+p.forEach(c=>{if(c.ai)c.eng-=[.3,.6,1.2][c.mode]*.5});p.forEach(c=>c.q=80-perf(c)*.035+rnd(-.3,.3));p.sort((a,b)=>a.q-b.q);const keep=[16,10,10][k];
+p.forEach((c,i)=>c.el=k<2&&i>=keep);Q.res=p.slice();if(k<2){Q.tails.unshift(p.slice(keep));Q.pool=p.slice(0,keep)}Q.st++;Q.done=Q.st>2;dq()}
+function toRace(){Q.pool.concat(...Q.tails).forEach((c,i)=>{c.g=i;c.t=i*.25+(c.ai?rnd(0,.4):0)});seq()}
 
-        let engineMod = this.engine / 100.0;
-        if (engineMod < 0.6) engineMod = 0.5 + (engineMod - 0.6) * 0.5;
-        
-        let ageMod = 1.0;
-        if (this.age < 22) ageMod = 0.95;
-        else if (this.age > 35) ageMod = 1.0 - (this.age - 35) * 0.015;
+function seq(){ph=0;app.innerHTML=hdr()+`<div class=lights id=L>${'<i></i>'.repeat(5)}</div><button class="big" id=gbt onclick=go()>ГОТОВ</button>`}
+function go(){const b=$('#gbt');
+if(ph==0){ph=1;b.textContent='Ждите…';let n=0;iv1=setInterval(()=>{$('#L').children[n++].classList.add('on');if(n==5){clearInterval(iv1);to1=setTimeout(()=>{ph=2;tgo=performance.now();document.querySelectorAll('#L i').forEach(e=>e.className='g');b.textContent='GO!';b.classList.add('go')},rnd(600,2600))}},700)}
+else if(ph==1){ph=3;clearInterval(iv1);clearTimeout(to1);reac(null)}
+else if(ph==2){ph=3;reac(performance.now()-tgo)}}
+function reac(ms){const pen=ms===null?1.5:ms<300?-.5:ms<600?0:ms<1000?.6:1.2;me.t+=pen;
+const lb=ms===null?'ФАЛЬСТАРТ':ms<300?'ОТЛИЧНО':ms<600?'НОРМАЛЬНО':'МЕДЛЕННО';
+app.innerHTML=hdr()+`<div style="text-align:center;margin-top:200px"><p>Реакция: ${ms===null?'—':Math.round(ms)+' мс'}</p><h1 style="font-size:44px;color:${pen>0?'#b05050':'var(--g)'}">${lb}</h1><p class=m>Поехали!</p></div>`;setTimeout(race,1600)}
 
-        let base = (this.skill * 0.7 + this.consistency * 0.3) * speedMult * engineMod * ageMod;
-        return { perf: Math.max(10, base * (0.9 + Math.random() * 0.2)), wear: wearMult, spin: spinChance };
-    }
+const order=()=>C.slice().sort((a,b)=>(a.dnf?1:0)-(b.dnf?1:0)||(a.dnf?b.dl-a.dl:a.t-b.t));
+function race(){Rc={lap:0,run:0,sp:1};
+app.innerHTML=hdr()+`<div class=card style="display:flex;align-items:center;gap:6px"><button id=pp style="width:54px;margin:0" onclick=pp()>▶</button><div style="flex:1;background:#26262b;border-radius:10px;overflow:hidden"><div id=bar style="background:var(--g);padding:10px;white-space:nowrap">Круг 0/52</div></div>${[1,2,3].map(s=>`<button class="${s==1?'on':''}" id=s${s} style="width:42px;margin:0;padding:10px 0" onclick=spd(${s})>${'»'.repeat(s)}</button>`).join('')}</div><div id=tbl></div><div class=card><div style="display:flex;justify-content:space-between;align-items:center"><b id=ps style="font-size:32px"></b><div id=en></div></div><div class=modes>${['Безопасно','Баланс','Агрессивно'].map((n,i)=>`<button id=m${i} class="${['sf','','ag'][i]} ${me.mode==i?'on':''}" onclick=sm(${i})>${n}</button>`).join('')}</div></div>`;drawR();pp()}
+function sm(i){me.mode=i;[0,1,2].forEach(j=>$('#m'+j).classList.toggle('on',j==i))}
+function pp(){if(Rc.run){clearInterval(Rc.iv);Rc.run=0;$('#pp').textContent='▶'}else{Rc.run=1;$('#pp').textContent='⏸';Rc.iv=setInterval(tick,700/Rc.sp)}}
+function spd(s){Rc.sp=s;[1,2,3].forEach(j=>$('#s'+j).classList.toggle('on',j==s));if(Rc.run){clearInterval(Rc.iv);Rc.iv=setInterval(tick,700/s)}}
+function drawR(){const o=order(),i=o.indexOf(me);
+$('#tbl').innerHTML=o.map((c,k)=>{const d=c.g-k,ch=c.dnf?'':d>0?`<span class=up>▲${d}</span>`:d<0?`<span class=dn>▼${-d}</span>`:'–';return row(k+1,c,c.dnf?'DNF':k?'+'+(c.t-o[k-1].t).toFixed(1):'ЛИДЕР','',ch)}).join('');
+$('#bar').style.width=Math.max(22,Rc.lap/52*100)+'%';$('#bar').textContent=`Круг ${Rc.lap}/52`;
+$('#ps').textContent=me.dnf?'DNF':'P'+(i+1);$('#en').innerHTML=pill(me.eng).replace('class=pl','class=pl style="font-size:20px;padding:4px 10px"')}
+function tick(){Rc.lap++;const prev=order();
+C.forEach(c=>{if(c.dnf)return;c.t+=90-perf(c)*.035+rnd(-.35,.35);if(c.me){c.eng-=WEAR[c.mode];G.eng=cl(c.eng,0,100)}else{c.eng-=WEAR[c.mode]*rnd(.8,1.2);if(c.eng<35)c.mode=0;else if(R()<.03)c.mode=[0,1,1,2][Math.floor(R()*4)]}
+if(c.eng<=0||(c.mode==2&&c.eng<30&&R()<.03)||(c.ai&&R()<.0006)){c.dnf=1;c.dl=Rc.lap;if(c.me&&Rc.sp<3)spd(3)}});
+for(let i=1;i<prev.length;i++){const a=prev[i-1],c=prev[i];if(!a.dnf&&!c.dnf&&c.t<a.t&&R()<.55)c.t=a.t+.08}
+drawR();if(Rc.lap>=52)fin()}
+function fin(){clearInterval(Rc.iv);const o=order(),p=o.indexOf(me)+1;let pts=0;
+o.forEach((c,i)=>{if(!c.dnf&&i<10){G.pts[c.code]=(G.pts[c.code]||0)+PTS[i];if(c.me)pts=PTS[i]}});
+const pr=me.dnf?0:+((23-p)*.4).toFixed(1);G.money+=pr;if(!me.dnf&&p==1)G.w++;if(!me.dnf&&p<=3)G.pod++;
+const rv=o.find(c=>c.code==G.rival),win=o.indexOf(me)<o.indexOf(rv);G.h[win?0:1]++;G.eng=cl(me.eng,0,100);const sw=[];G.ai.forEach(d=>{const c=C.find(x=>x.code==d.code);d.eng=cl(c.eng,0,100);if(d.eng<50){d.eng=100;sw.push(d.code)}});G.race++;save();
+app.innerHTML=`<h1>${me.dnf?'Сход с гонки':'Финиш: P'+p}</h1><div class=card>Очки: <b>+${pts}</b> · Призовые: <b>+$${pr}M</b><br><span class=m>Соперник ${G.rival}: ${win?'вы впереди':'он впереди'} (${G.h[0]}:${G.h[1]})<br>Новые двигатели у соперников: ${sw.join(', ')||'нет'}</span></div><div class=tb>${o.map((c,i)=>row(i+1,c,c.dnf?'DNF':i?'+'+(c.t-o[0].t).toFixed(1):'ПОБЕДА')).join('')}</div><button class=b onclick="${G.race>=20?'season()':'hub()'}">${G.race>=20?'Итоги сезона':'Далее'}</button>`}
 
-    getGoatScore() {
-        return (this.wins * 500) + (this.podiums * 200) + (this.poles * 100) + (this.points * 10);
-    }
-}
-
-// Глобальное состояние
-let player = null;
-let opponents = [];
-let rival = null;
-let currentRound = 0;
-const calendar = ["Бахрейн", "Саудовская Аравия", "Австралия", "Япония", "Китай", "Майами", "Монако", "Канада", "Испания", "Великобритания", "Венгрия", "Бельгия", "Италия", "Сингапур", "США", "Мексика", "Бразилия", "Абу-Даби"];
-let raceState = { qualified: false, raced: false };
-
-// Инициализация
-function initCareer() {
-    const name = document.getElementById('p-name').value || "Пилот";
-    const nat = document.getElementById('p-nat').value;
-    const age = parseInt(document.getElementById('p-age').value);
-    const team = document.getElementById('p-team').value;
-
-    if (age < 18 || age > 50) { alert("Возраст должен быть от 18 до 50!"); return; }
-
-    player = new Driver(name, nat, age, team, true);
-    
-    // Генерация ИИ-пилотов
-    const aiNames = ["М. Ферстаппен", "Л. Хэмилтон", "Ш. Леклер", "Л. Норрис", "О. Пиастри", "Дж. Расселл", "К. Сайнс", "Ф. Алонсо", "П. Гасли", "Э. Окон", "А. Албон", "Ю. Цунода"];
-    const teams = ["Red Bull", "Ferrari", "Mercedes", "McLaren", "Aston Martin", "Alpine", "Williams", "Haas"];
-    
-    opponents = [];
-    aiNames.forEach((n, i) => {
-        let aiTeam = teams[i % teams.length];
-        // Избегаем дублирования команды игрока
-        if (aiTeam === team) aiTeam = teams[(i+1) % teams.length];
-        let ai = new Driver(n, "Мир", Math.floor(Math.random() * 27) + 18, aiTeam);
-        if (i < 4) { ai.skill += 8; ai.consistency += 5; } // Топ-пилоты сильнее
-        opponents.push(ai);
-    });
-
-    // Назначаем сезонного соперника
-    rival = opponents[Math.floor(Math.random() * opponents.length)];
-
-    document.getElementById('setup-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.remove('hidden');
-    
-    log(`Добро пожаловать в MRC 2026!`, "highlight");
-    log(`Пилот: ${player.name} | Команда: ${player.team} | Возраст: ${player.age}`);
-    log(`Сезонный соперник: ${rival.name} (${rival.team})`, "info");
-    log("Нажмите 'Квалификация', чтобы начать уик-энд.");
-    
-    updateUI();
-}
-
-// Обновление интерфейса
-function updateUI() {
-    if (!player) return;
-    
-    document.getElementById('ui-name').innerText = player.name;
-    document.getElementById('ui-team').innerText = player.team;
-    document.getElementById('ui-pos').innerText = player.currentPos ? `P${player.currentPos}` : "-";
-    document.getElementById('ui-engine').innerText = `${player.engine.toFixed(0)}%`;
-    document.getElementById('ui-mode').innerText = player.mode;
-    document.getElementById('ui-points').innerText = player.points;
-    
-    // Цвет двигателя
-    const engEl = document.getElementById('ui-engine');
-    if (player.engine < 60) engEl.style.color = "var(--red)";
-    else if (player.engine < 80) engEl.style.color = "var(--yellow)";
-    else engEl.style.color = "var(--green)";
-
-    // Кнопки режимов
-    document.querySelectorAll('.mode-btn').forEach(b => b.className = 'mode-btn');
-    if (player.mode === 'SAFE') document.getElementById('btn-safe').classList.add('active-safe');
-    else if (player.mode === 'BALANCED') document.getElementById('btn-balanced').classList.add('active-balanced');
-    else document.getElementById('btn-aggressive').classList.add('active-aggressive');
-
-    // Трофеи
-    const troEl = document.getElementById('ui-trophies');
-    if (player.trophies.length === 0) {
-        troEl.innerHTML = '<span style="color:#666; font-size:0.8rem;">Пока нет трофеев</span>';
-    } else {
-        troEl.innerHTML = player.trophies.map(t => `<span class="trophy-badge">🏆 ${t}</span>`).join('');
-    }
-
-    // Таблица
-    updateStandings();
-}
-
-function updateStandings() {
-    const tbody = document.querySelector('#standings-table tbody');
-    const allDrivers = [player, ...opponents].sort((a, b) => b.points - a.points || b.getGoatScore() - a.getGoatScore());
-    
-    tbody.innerHTML = allDrivers.map((d, i) => {
-        let rowClass = d.isPlayer ? 'player-row' : (d === rival ? 'rival-row' : '');
-        return `<tr class="${rowClass}">
-            <td>${i + 1}</td>
-            <td>${d.name} ${d.isPlayer ? '👤' : (d === rival ? '⚔️' : '')}</td>
-            <td>${d.team}</td>
-            <td>${d.points}</td>
-            <td>${d.wins}</td>
-            <td>${d.getGoatScore()}</td>
-        </tr>`;
-    }).join('');
-}
-
-function log(msg, type = '') {
-    const logEl = document.getElementById('race-log');
-    const p = document.createElement('p');
-    p.innerText = msg;
-    if (type) p.className = type;
-    logEl.appendChild(p);
-    logEl.scrollTop = logEl.scrollHeight;
-}
-
-function setMode(mode) {
-    player.mode = mode;
-    log(`Режим изменен на: ${mode}`, mode === 'AGGRESSIVE' ? 'danger' : (mode === 'SAFE' ? 'success' : 'highlight'));
-    updateUI();
-}
-
-// ================= КВАЛИФИКАЦИЯ =================
-function runQualifying() {
-    log(`--- КВАЛИФИКАЦИЯ: ${calendar[currentRound]} ---`, "highlight");
-    document.getElementById('btn-quali').disabled = true;
-    
-    let results = [];
-    [player, ...opponents].forEach(d => {
-        if (d.engine < 20) { log(`${d.name} не допущен к квале (двигатель < 20%)`, "danger"); return; }
-        let baseTime = 90.0 - (d.skill * 0.2) + (100 - d.engine) * 0.1;
-        let finalTime = baseTime + (0.1 + Math.random() * 0.8);
-        results.push({ driver: d, time: finalTime });
-    });
-
-    results.sort((a, b) => a.time - b.time);
-    results.forEach((r, i) => {
-        r.driver.gridPos = i + 1;
-        r.driver.currentPos = i + 1;
-        if (i === 0) r.driver.poles++;
-    });
-
-    log(`Вы квалифицировались на P${player.gridPos}`, player.gridPos <= 3 ? "success" : "");
-    document.getElementById('btn-quali').classList.add('hidden');
-    document.getElementById('btn-race').classList.remove('hidden');
-    updateUI();
-}
-
-// ================= ГОНКА =================
-function startRace() {
-    log(`--- ГОНКА: ${calendar[currentRound]} ---`, "danger");
-    document.getElementById('btn-race').disabled = true;
-    
-    // Симуляция старта
-    let reaction = Math.random() * 0.8;
-    let bonus = 0;
-    if (reaction < 0.2) { bonus = 2; log("Отличная реакция на старте! +2 позиции", "success"); }
-    else if (reaction > 0.6) { bonus = -2; log("Плохая реакция! -2 позиции", "danger"); }
-    
-    player.currentPos = Math.max(1, Math.min(20, player.gridPos - bonus));
-
-    // Симуляция кругов
-    let participants = [player, ...opponents].filter(d => d.engine >= 20);
-    participants.forEach(d => { d.raceTime = 0; d.dnf = false; d.mode = d.isPlayer ? player.mode : 'BALANCED'; });
-
-    for (let lap = 1; lap <= 52; lap++) {
-        participants.forEach(d => {
-            if (d.dnf) return;
-            let perf = d.getPerformance();
-            d.raceTime += (1000.0 / perf.perf) * 0.1;
-            d.engine -= perf.wear * 0.15;
-            if (d.engine < 0) d.engine = 0;
-            
-            if (Math.random() < perf.spin) {
-                d.raceTime += 2.0;
-                if (d.isPlayer) log(`Спин на круге ${lap}! Потеря времени.`, "highlight");
-            }
-            if (d.engine < 5 && Math.random() < 0.01) {
-                d.dnf = true;
-                if (d.isPlayer) log("СХОД! Двигатель отказал.", "danger");
-            }
-        });
-        
-        // Обновление позиций на каждом круге
-        let active = participants.filter(d => !d.dnf).sort((a, b) => a.raceTime - b.raceTime);
-        active.forEach((d, i) => d.currentPos = i + 1);
-    }
-
-    // Финиш
-    let final = participants.filter(d => !d.dnf).sort((a, b) => a.raceTime - b.raceTime);
-    
-    player.races++;
-    final.forEach((d, i) => {
-        let pos = i + 1;
-        if (pos === 1) d.wins++;
-        if (pos <= 3) d.podiums++;
-        
-        let pts = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1][pos - 1] || 0;
-        d.points += pts;
-    });
-
-    // Быстрый круг
-    if (final.length > 0) {
-        let fl = final[0]; // Упрощенно: победитель получает быстрый круг
-        fl.fastestLaps++;
-        if (fl.isPlayer) log("🏆 Вы показали быстрейший круг гонки!", "success");
-    }
-
-    let pPos = final.findIndex(d => d.isPlayer) + 1;
-    log(`ФИНИШ! Вы закончили гонку на P${pPos}`, pPos <= 3 ? "success" : "");
-    
-    if (pPos === 1) {
-        log("🏆 ПОБЕДА! Трофей добавлен в комнату трофеев.", "success");
-        player.trophies.push(calendar[currentRound]);
-    }
-
-    // Сравнение с соперником
-    let rivalPos = final.findIndex(d => d === rival) + 1;
-    if (rivalPos > pPos) log(`Вы обошли своего соперника ${rival.name} в гонке!`, "info");
-    else if (rivalPos < pPos) log(`Соперник ${rival.name} финишировал впереди вас.`, "danger");
-
-    // Проверка двигателя
-    if (player.engine < 90 && player.engineChanges > 0) {
-        log(`Внимание: Двигатель изношен (${player.engine.toFixed(0)}%). Осталось замен: ${player.engineChanges}`, "highlight");
-    }
-
-    document.getElementById('btn-next').classList.remove('hidden');
-    updateUI();
-}
-
-// ================= ПЕРЕХОД К СЛЕДУЮЩЕМУ ЭТАПУ =================
-function nextRound() {
-    // Замена двигателя между гонками
-    if (player.engine < 90 && player.engineChanges > 0) {
-        if (confirm(`Состояние двигателя: ${player.engine.toFixed(0)}%. Заменить двигатель? (Осталось: ${player.engineChanges})`)) {
-            player.engine = 100;
-            player.engineChanges--;
-            log("Двигатель заменен! Мощность восстановлена.", "success");
-        }
-    }
-    
-    currentRound++;
-    if (currentRound >= calendar.length) {
-        log("--- СЕЗОН ЗАВЕРШЕН! ---", "danger");
-        log(`Ваши очки: ${player.points} | Победы: ${player.wins} | Подиумы: ${player.podiums}`, "highlight");
-        log(`GOAT Score: ${player.getGoatScore()}`, "highlight");
-        document.getElementById('btn-next').disabled = true;
-        return;
-    }
-
-    player.currentPos = 1;
-    document.getElementById('btn-next').classList.add('hidden');
-    document.getElementById('btn-quali').classList.remove('hidden');
-    document.getElementById('btn-quali').disabled = false;
-    document.getElementById('btn-race').classList.add('hidden');
-    document.getElementById('btn-race').disabled = false;
-    
-    document.getElementById('race-log').innerHTML = '';
-    log(`--- СЛЕДУЮЩИЙ ЭТАП: ${calendar[currentRound]} ---`, "info");
-    updateUI();
-}
-</script>
-</body>
-</html>
+function season(){const st=standing(),rk=st.indexOf(G.code)+1;if(!G.hist.length||G.hist[G.hist.length-1].y!=G.year){if(rk==1)G.titles++;G.hist.push({y:G.year,rk,pt:G.pts[G.code]||0,tm:TEAMS[G.team][0]});save()}
+const t=Math.max(0,G.team-(rk<=3?3:rk<=8?2:rk<=14?1:0));
+const rows=st.map((c,i)=>({c,i})).filter(x=>x.i<10||x.c==G.code).map(x=>row(x.i+1,{code:x.c,col:x.c==G.code?'#fff':'#444',eng:0,me:x.c==G.code},(G.pts[x.c]||0)+' оч.')).join('').replace(/<div class=pl[^>]*>[^<]*<\/div>/g,'<span></span>');
+app.innerHTML=`<h1>${rk==1?'🏆 Чемпион '+G.year+'!':'Сезон '+G.year+': P'+rk}</h1><div class=card>Победы: ${G.w} · Подиумы: ${G.pod} · Титулы: ${G.titles}<br><span class=m>Возраст ${G.age}</span><br><span class=m>${G.hist.map(h=>h.y+': P'+h.rk+' ('+h.pt+')').join(' · ')}</span></div><div class=tb>${rows}</div>${(t<G.team?`<button class=b onclick="next(${t})">Перейти в ${TEAMS[t][0]} (машина ${G.tr[t]})</button>`:'')}<button class=b onclick=next()>Сезон ${G.year+1}</button><button onclick=retire()>Завершить карьеру</button>`}
+function next(t){const a=G.age;G.skill=cl(G.skill+(a<27?2:a<=33?0:-1.5),40,99);G.age++;G.season++;G.year++;G.eng=100;G.ai.forEach(d=>d.eng=100);G.race=0;G.pts={};G.w=G.w;
+G.tr=G.tr.map(v=>cl(v+rnd(-3,3),52,95));G.ai.forEach(d=>d.skill=Math.round(cl(d.skill+rnd(-2.5,2.5),60,94)));
+if(t!==undefined&&t<G.team){G.team=t;G.carUp=0}assign();hub()}
+function retire(){try{localStorage.removeItem('f1c')}catch(e){}
+app.innerHTML=`<h1>Конец карьеры</h1><div class=card>${G.flag} <b>${G.name}</b>, ${G.age} лет<br>Сезонов: ${G.hist.length} (${G.hist.length?G.hist[0].y+'–'+G.hist[G.hist.length-1].y:''}) · Титулов: <b>${G.titles}</b><br>Побед: ${G.w} · Подиумов: ${G.pod}</div><button class=b onclick=menu()>В меню</button>`}
+menu();
+</script></body></html>
