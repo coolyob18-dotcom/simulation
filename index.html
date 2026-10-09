@@ -1,454 +1,432 @@
-import random
-import time
-import sys
-
-class Driver:
-    def __init__(self, name, nationality, age, team, is_player=False):
-        self.name = name
-        self.nationality = nationality
-        self.age = age
-        self.team = team
-        self.is_player = is_player
-        
-        # Статистика
-        self.points = 0
-        self.wins = 0
-        self.podiums = 0
-        self.poles = 0
-        self.fastest_laps = 0
-        self.dnfs = 0
-        self.races = 0
-        self.trophies = set() # Для Trophy Room
-        
-        # Двигатель
-        self.engine_condition = 100.0 # 0-100
-        self.engine_changes = 3 # Доступно замен (всего 4 двигателя на сезон)
-        
-        # Характеристики (зависят от возраста)
-        if 18 <= age <= 20:
-            self.skill = random.randint(65, 75)
-            self.consistency = random.randint(55, 70)
-            self.aggression = random.randint(75, 90)
-        elif 21 <= age <= 25:
-            self.skill = random.randint(75, 85)
-            self.consistency = random.randint(70, 80)
-            self.aggression = random.randint(65, 80)
-        elif 26 <= age <= 30:
-            self.skill = random.randint(85, 95)
-            self.consistency = random.randint(80, 90)
-            self.aggression = random.randint(60, 75)
-        elif 31 <= age <= 35:
-            self.skill = random.randint(80, 90)
-            self.consistency = random.randint(85, 95)
-            self.aggression = random.randint(55, 70)
-        elif 36 <= age <= 40:
-            self.skill = random.randint(75, 85)
-            self.consistency = random.randint(88, 98)
-            self.aggression = random.randint(50, 65)
-        else: # 41-50
-            self.skill = random.randint(65, 80)
-            self.consistency = random.randint(85, 95)
-            self.aggression = random.randint(40, 55)
-
-    def get_performance(self, mode="BALANCED"):
-        # 1. Влияние режима
-        if mode == "SAFE":
-            speed_mult = 0.92
-            wear_mult = 0.5
-            spin_chance = 0.01
-        elif mode == "AGGRESSIVE":
-            speed_mult = 1.10
-            wear_mult = 2.0
-            spin_chance = 0.08
-        else: # BALANCED
-            speed_mult = 1.0
-            wear_mult = 1.0
-            spin_chance = 0.03
-
-        # 2. Влияние двигателя (Engine Management)
-        engine_mod = self.engine_condition / 100.0
-        if engine_mod < 0.6:
-            # Критическое падение мощности ниже 60%
-            engine_mod = 0.5 + (engine_mod - 0.6) * 0.5
-        
-        # 3. Базовый расчет скорости
-        base_speed = (self.skill * 0.7 + self.consistency * 0.3) * speed_mult * engine_mod
-        
-        # 4. Возрастной фактор (пик формы в 25-30)
-        if self.age < 22: age_mod = 0.95
-        elif self.age > 35: age_mod = 1.0 - (self.age - 35) * 0.015
-        else: age_mod = 1.0
-
-        # 5. Случайность
-        randomness = random.uniform(0.9, 1.1)
-        
-        return max(10, base_speed * randomness * age_mod), wear_mult, spin_chance
-
-    def get_goat_score(self):
-        # Очки для GOAT Status (как в оригинальной игре)
-        return (self.wins * 50) + (self.podiums * 20) + (self.poles * 10) + self.points
-
-class F1Game:
-    def __init__(self):
-        self.player = None
-        self.drivers = []
-        self.calendar = [
-            "Бахрейн", "Саудовская Аравия", "Австралия", "Япония", "Китай",
-            "Майами", "Эмилия-Романья", "Монако", "Канада", "Испания",
-            "Австрия", "Великобритания", "Венгрия", "Бельгия", "Нидерланды",
-            "Италия", "Азербайджан", "Сингапур", "США", "Мексика",
-            "Бразилия", "Лас-Вегас", "Катар", "Абу-Даби"
-        ]
-        self.current_race_index = 0
-        self.rival = None
-
-    def setup_game(self):
-        print("=" * 60)
-        print("MOTORSPORT RACER CAREER 2026 (Текстовый симулятор)")
-        print("=" * 60)
-        
-        name = input("Введите имя вашего пилота: ")
-        
-        print("\nВыберите национальность:")
-        nationalities = ["Россия", "Германия", "Великобритания", "Италия", "Франция", 
-                         "Испания", "Нидерланды", "Монако", "Бразилия", "США", 
-                         "Япония", "Австралия", "Канада", "Мексика", "Финляндия"]
-        for i, nat in enumerate(nationalities, 1):
-            print(f"{i}. {nat}")
-        while True:
-            try:
-                nat_choice = int(input("Ваш выбор (1-15): ")) - 1
-                if 0 <= nat_choice < len(nationalities):
-                    nationality = nationalities[nat_choice]
-                    break
-                else: print("Неверный выбор.")
-            except ValueError: print("Введите число.")
-        
-        while True:
-            try:
-                age = int(input("\nВведите ваш возраст (18-50): "))
-                if 18 <= age <= 50: break
-                else: print("Возраст должен быть от 18 до 50 лет.")
-            except ValueError: print("Введите число.")
-        
-        print("\nВыберите команду (уровень машины):")
-        teams = {
-            "Red Bull": 95, "Ferrari": 94, "Mercedes": 93, "McLaren": 92,
-            "Aston Martin": 88, "Alpine": 85, "Williams": 84, "RB": 82,
-            "Haas": 80, "Sauber": 78
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motorsport Racer Career 2026</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        team_list = list(teams.keys())
-        for i, team in enumerate(team_list, 1):
-            print(f"{i}. {team} (Рейтинг: {teams[team]})")
-        
-        while True:
-            try:
-                team_choice = int(input("Ваш выбор (1-10): ")) - 1
-                if 0 <= team_choice < len(team_list):
-                    team = team_list[team_choice]
-                    break
-                else: print("Неверный выбор.")
-            except ValueError: print("Введите число.")
+        #game-container {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1, h2, h3 {
+            color: #ff3b3b;
+            text-align: center;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+        .stat-value { font-weight: bold; color: #fff; }
+        .log {
+            height: 250px;
+            overflow-y: auto;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .log p { margin: 4px 0; }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: 0.2s;
+            min-width: 100px;
+        }
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .btn-main { background-color: #ff3b3b; color: white; }
+        .btn-main:hover:not(:disabled) { background-color: #d32f2f; }
+        .btn-sec { background-color: #333; color: #eee; }
+        .btn-sec:hover:not(:disabled) { background-color: #444; }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
+            font-size: 1em;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
 
-        self.player = Driver(name, nationality, age, team, is_player=True)
-        self.player.team_rating = teams[team]
-        
-        # Генерация пилотов соперников
-        ai_names = [
-            "Макс Ферстаппен", "Льюис Хэмилтон", "Шарль Леклер", "Ландо Норрис",
-            "Оскар Пиастри", "Джордж Расселл", "Карлос Сайнс", "Фернандо Алонсо",
-            "Лэнс Стролл", "Пьер Гасли", "Эстебан Окон", "Александр Албон",
-            "Юки Цунода", "Даниэль Риккардо", "Валттери Боттас", "Гуаньюй Чжоу",
-            "Кевин Магнуссен", "Нико Хюлькенберг", "Логан Сарджент", "Серхио Перес"
-        ]
-        random.shuffle(ai_names)
-        
-        for i, name_ai in enumerate(ai_names[:10]):
-            # Выбираем команду, отличную от команды игрока
-            available_teams = [t for t in team_list if t != team]
-            ai_team = random.choice(available_teams)
-            ai_age = random.randint(18, 45)
-            ai_nat = random.choice(nationalities)
-            ai_driver = Driver(name_ai, ai_nat, ai_age, ai_team, is_player=False)
-            ai_driver.team_rating = teams.get(ai_team, 80)
-            # Буст топ-пилотам
-            if name_ai in ["Макс Ферстаппен", "Льюис Хэмилтон", "Шарль Леклер", "Ландо Норрис"]:
-                ai_driver.skill += 8
-                ai_driver.consistency += 5
-            self.drivers.append(ai_driver)
+<div id="game-container">
+    <h1>🏎️ MRC 2026</h1>
 
-        # Назначение сезонного соперника (Season Rivalry)
-        self.rival = random.choice(self.drivers)
-        
-        print(f"\nДобро пожаловать, {name} ({nationality}), {age} лет, команда {team}!")
-        print(f"Ваш сезонный соперник: {self.rival.name} из команды {self.rival.team}!")
-        print("Ваша карьера начинается!")
-
-    def display_standings(self):
-        print("\n" + "=" * 70)
-        print("ТАБЛИЦА ЛИЧНОГО ЗАЧЕТА")
-        print("=" * 70)
-        print(f"{'Поз':<4} {'Пилот':<22} {'Команда':<15} {'Очки':<6} {'Победы':<6}")
-        print("-" * 70)
-        sorted_drivers = sorted(self.drivers + [self.player], key=lambda x: x.points, reverse=True)
-        for i, d in enumerate(sorted_drivers, 1):
-            marker = "  <-- ВЫ" if d.is_player else ("  <-- Соперник" if d == self.rival else "")
-            print(f"{i:<4} {d.name:<22} {d.team:<15} {d.points:<6} {d.wins:<6}{marker}")
-        print("=" * 70)
-
-    def handle_qualifying(self):
-        print("\n" + "=" * 40)
-        print(f"КВАЛИФИКАЦИЯ: {self.calendar[self.current_race_index]}")
-        print("=" * 40)
-        
-        results = []
-        for d in self.drivers + [self.player]:
-            if d.engine_condition < 20:
-                print(f"{d.name} не может участвовать из-за состояния двигателя!")
-                continue
-            base_time = 90.0 - (d.skill * 0.2) + (100 - d.engine_condition) * 0.1
-            random_lap = random.uniform(0.1, 0.8)
-            final_time = base_time + random_lap
-            results.append((d, final_time))
-        
-        results.sort(key=lambda x: x[1])
-        
-        print("\nРезультаты квалификации (Топ-10):")
-        for i, (d, time) in enumerate(results, 1):
-            if i <= 10:
-                print(f"{i}. {d.name} ({d.team}) - {time:.3f} сек")
-            if i == 1: d.poles += 1
-        
-        self.player.grid_position = next(i for i, (d, _) in enumerate(results, 1) if d.is_player)
-        print(f"\nВы стартуете с {self.player.grid_position} позиции.")
-        return results
-
-    def handle_race_start(self):
-        print("\n" + "=" * 40)
-        print("СТАРТ ГОНКИ! Приготовьтесь...")
-        print("=" * 40)
-        time.sleep(1)
-        for i in range(3, 0, -1):
-            print(f"{i}...")
-            time.sleep(1)
-        
-        start_time = time.time()
-        input(">>> НАЖМИТЕ ENTER! <<<")
-        reaction_time = time.time() - start_time
-        
-        if reaction_time < 0.2:
-            print(f"Реакция: {reaction_time:.3f} сек. Отличный старт!")
-            bonus = 3
-        elif reaction_time < 0.4:
-            print(f"Реакция: {reaction_time:.3f} сек. Хороший старт.")
-            bonus = 1
-        elif reaction_time < 0.7:
-            print(f"Реакция: {reaction_time:.3f} сек. Средний старт.")
-            bonus = 0
-        else:
-            print(f"Реакция: {reaction_time:.3f} сек. Плохой старт! Потеря позиций.")
-            bonus = -2
+    <!-- Экран настройки -->
+    <div id="setup-screen">
+        <div class="input-group">
+            <label>Имя пилота:</label>
+            <input type="text" id="p-name" placeholder="Введите имя" value="Никита">
             
-        self.player.start_bonus = bonus
-        print(f"Стартовый бонус: {bonus} позиций")
+            <label>Национальность:</label>
+            <select id="p-nat">
+                <option value="Россия">Россия</option>
+                <option value="Германия">Германия</option>
+                <option value="Великобритания">Великобритания</option>
+                <option value="Италия">Италия</option>
+                <option value="Испания">Испания</option>
+                <option value="США">США</option>
+                <option value="Япония">Япония</option>
+            </select>
 
-    def simulate_race(self):
-        print("\n" + "=" * 40)
-        print(f"ГОНКА: {self.calendar[self.current_race_index]}")
-        print("=" * 40)
-        
-        self.handle_race_start()
-        
-        # Собираем всех участников
-        participants = self.drivers + [self.player]
-        
-        # Стартовые позиции
-        start_order = sorted(participants, key=lambda x: getattr(x, 'grid_position', 99))
-        
-        # Учет стартового бонуса игрока
-        p_idx = start_order.index(self.player)
-        new_idx = max(0, min(len(start_order)-1, p_idx - self.player.start_bonus))
-        start_order.pop(p_idx)
-        start_order.insert(new_idx, self.player)
-        
-        # Начальные позиции
-        for i, d in enumerate(start_order):
-            d.current_pos = i + 1
-            d.race_time = 0.0
-            d.dnf = False
-        
-        # Симуляция гонки
-        laps = 52
-        safety_car_active = False
-        sc_laps = 0
-        
-        print("\nСимуляция гонки...")
-        for lap in range(1, laps + 1):
-            # Выбор режима для игрока (упрощенно, раз в 10 кругов или при SC)
-            if d.is_player and (lap % 10 == 1 or safety_car_active):
-                if not safety_car_active:
-                    print(f"\nКруг {lap}. Ваша позиция: {d.current_pos}")
-                    mode_choice = input("Выберите режим (S - Safe, B - Balanced, A - Aggressive): ").upper()
-                    if mode_choice not in ['S', 'B', 'A']:
-                        mode_choice = 'B'
-                    self.player_mode = "SAFE" if mode_choice == 'S' else ("AGGRESSIVE" if mode_choice == 'A' else "BALANCED")
+            <label>Возраст (18-50):</label>
+            <input type="number" id="p-age" min="18" max="50" value="20">
+
+            <label>Команда:</label>
+            <select id="p-team">
+                <option value="Red Bull">Red Bull (95)</option>
+                <option value="Ferrari">Ferrari (94)</option>
+                <option value="Mercedes">Mercedes (93)</option>
+                <option value="McLaren">McLaren (92)</option>
+                <option value="Aston Martin">Aston Martin (88)</option>
+                <option value="Alpine">Alpine (85)</option>
+                <option value="Haas">Haas (80)</option>
+            </select>
+        </div>
+        <button class="btn-main" onclick="startCareer()">НАЧАТЬ КАРЬЕРУ</button>
+    </div>
+
+    <!-- Экран гонки -->
+    <div id="race-screen" class="hidden">
+        <div class="stats-grid">
+            <div class="stat-item"><span>Пилот:</span> <span class="stat-value" id="ui-name">-</span></div>
+            <div class="stat-item"><span>Команда:</span> <span class="stat-value" id="ui-team">-</span></div>
+            <div class="stat-item"><span>Позиция:</span> <span class="stat-value" id="ui-pos">-</span></div>
+            <div class="stat-item"><span>Двигатель:</span> <span class="stat-value" id="ui-engine">100%</span></div>
+            <div class="stat-item"><span>Режим:</span> <span class="stat-value" id="ui-mode">BALANCED</span></div>
+            <div class="stat-item"><span>Очки:</span> <span class="stat-value" id="ui-points">0</span></div>
+        </div>
+
+        <div class="log" id="race-log"></div>
+
+        <div class="controls" id="race-controls">
+            <button class="btn-sec" onclick="setMode('SAFE')">SAFE 🛡️</button>
+            <button class="btn-main" onclick="setMode('BALANCED')">BALANCED ⚖️</button>
+            <button class="btn-sec" onclick="setMode('AGGRESSIVE')">AGGRESSIVE 🔥</button>
+        </div>
+        <div class="controls" id="action-controls" style="margin-top: 10px;">
+            <button class="btn-main" id="btn-quali" onclick="runQualifying()">КВАЛИФИКАЦИЯ</button>
+            <button class="btn-main hidden" id="btn-race" onclick="startRace()">СТАРТ ГОНКИ</button>
+            <button class="btn-main hidden" id="btn-next" onclick="nextRace()">СЛЕДУЮЩИЙ ЭТАП</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Классы и Логика ---
+    
+    class Driver {
+        constructor(name, nat, age, team, isPlayer = false) {
+            this.name = name;
+            this.nat = nat;
+            this.age = age;
+            this.team = team;
+            this.isPlayer = isPlayer;
+            this.points = 0;
+            this.engine = 100;
+            this.engineChanges = 3;
+            this.wins = 0;
+            this.podiums = 0;
+            this.poles = 0;
+            this.dnf = false;
+            this.raceTime = 0;
+            this.currentPos = 1;
+            this.mode = 'BALANCED';
             
-            # Обработка пит-стопов и замены двигателя
-            for d in participants:
-                if d.dnf: continue
+            // Генерация характеристик от возраста
+            if (age <= 20) {
+                this.skill = 65 + Math.random() * 10;
+                this.consistency = 55 + Math.random() * 15;
+                this.aggression = 75 + Math.random() * 15;
+            } else if (age <= 25) {
+                this.skill = 75 + Math.random() * 10;
+                this.consistency = 70 + Math.random() * 10;
+                this.aggression = 65 + Math.random() * 15;
+            } else if (age <= 30) {
+                this.skill = 85 + Math.random() * 10;
+                this.consistency = 80 + Math.random() * 10;
+                this.aggression = 60 + Math.random() * 15;
+            } else if (age <= 35) {
+                this.skill = 80 + Math.random() * 10;
+                this.consistency = 85 + Math.random() * 10;
+                this.aggression = 55 + Math.random() * 15;
+            } else {
+                this.skill = 70 + Math.random() * 10;
+                this.consistency = 85 + Math.random() * 10;
+                this.aggression = 40 + Math.random() * 15;
+            }
+        }
+
+        getPerformance() {
+            let speedMult = 1.0;
+            let wearMult = 1.0;
+            let spinChance = 0.03;
+
+            if (this.mode === 'SAFE') {
+                speedMult = 0.92; wearMult = 0.5; spinChance = 0.01;
+            } else if (this.mode === 'AGGRESSIVE') {
+                speedMult = 1.10; wearMult = 2.0; spinChance = 0.08;
+            }
+
+            let engineMod = this.engine / 100.0;
+            if (engineMod < 0.6) engineMod = 0.5 + (engineMod - 0.6) * 0.5;
+            
+            let ageMod = 1.0;
+            if (this.age < 22) ageMod = 0.95;
+            else if (this.age > 35) ageMod = 1.0 - (this.age - 35) * 0.015;
+
+            let base = (this.skill * 0.7 + this.consistency * 0.3) * speedMult * engineMod * ageMod;
+            let rand = 0.9 + Math.random() * 0.2;
+            
+            return { perf: Math.max(10, base * rand), wear: wearMult, spin: spinChance };
+        }
+    }
+
+    // --- Глобальное состояние игры ---
+    let player = null;
+    let opponents = [];
+    let currentRaceIndex = 0;
+    const calendar = ["Бахрейн", "Саудовская Аравия", "Австралия", "Япония", "Китай", "Майами", "Монако", "Канада", "Испания", "Великобритания", "Венгрия", "Бельгия", "Италия", "Сингапур", "США", "Мексика", "Бразилия", "Абу-Даби"];
+    let raceStarted = false;
+
+    // --- Инициализация ---
+    function startCareer() {
+        const name = document.getElementById('p-name').value || "Пилот";
+        const nat = document.getElementById('p-nat').value;
+        const age = parseInt(document.getElementById('p-age').value);
+        const team = document.getElementById('p-team').value;
+
+        if (age < 18 || age > 50) { alert("Возраст должен быть от 18 до 50!"); return; }
+
+        player = new Driver(name, nat, age, team, true);
+        
+        // Генерация соперников
+        const aiNames = ["Ферстаппен", "Хэмилтон", "Леклер", "Норрис", "Пиастри", "Расселл", "Сайнс", "Алонсо", "Гасли", "Окон"];
+        opponents = [];
+        aiNames.forEach(n => {
+            let aiTeam = ["Red Bull", "Ferrari", "Mercedes", "McLaren", "Aston Martin"][Math.floor(Math.random() * 5)];
+            let ai = new Driver(n, "Мир", Math.floor(Math.random() * 27) + 18, aiTeam);
+            if (n === "Ферстаппен" || n === "Хэмилтон") ai.skill += 5;
+            opponents.push(ai);
+        });
+
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('race-screen').classList.remove('hidden');
+        
+        updateUI();
+        log("Добро пожаловать в MRC 2026! Ваш путь начинается.");
+        log(`Пилот: ${player.name} | Команда: ${player.team} | Возраст: ${player.age}`);
+        log("Нажмите 'КВАЛИФИКАЦИЯ', чтобы начать уик-энд.");
+    }
+
+    function updateUI() {
+        if (!player) return;
+        document.getElementById('ui-name').innerText = player.name;
+        document.getElementById('ui-team').innerText = player.team;
+        document.getElementById('ui-pos').innerText = "P" + player.currentPos;
+        document.getElementById('ui-engine').innerText = player.engine.toFixed(0) + "%";
+        document.getElementById('ui-mode').innerText = player.mode;
+        document.getElementById('ui-points').innerText = player.points;
+        
+        // Цвет двигателя
+        const engEl = document.getElementById('ui-engine');
+        if (player.engine < 60) engEl.style.color = "#ff3b3b";
+        else if (player.engine < 80) engEl.style.color = "#ffaa00";
+        else engEl.style.color = "#00ff88";
+    }
+
+    function log(msg, color = null) {
+        const logEl = document.getElementById('race-log');
+        const p = document.createElement('p');
+        p.innerText = msg;
+        if (color) p.style.color = color;
+        logEl.appendChild(p);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function setMode(mode) {
+        player.mode = mode;
+        log(`Режим изменен на: ${mode}`, mode === 'AGGRESSIVE' ? '#ff3b3b' : (mode === 'SAFE' ? '#00ff88' : '#ffaa00'));
+        updateUI();
+    }
+
+    function runQualifying() {
+        log(`--- КВАЛИФИКАЦИЯ: ${calendar[currentRaceIndex]} ---`, "#ffaa00");
+        
+        let results = [];
+        [player, ...opponents].forEach(d => {
+            if (d.engine < 20) return;
+            let baseTime = 90.0 - (d.skill * 0.2) + (100 - d.engine) * 0.1;
+            let rand = 0.1 + Math.random() * 0.8;
+            results.push({ driver: d, time: baseTime + rand });
+        });
+
+        results.sort((a, b) => a.time - b.time);
+        results.forEach((r, i) => {
+            r.driver.currentPos = i + 1;
+            if (i === 0) r.driver.poles++;
+        });
+
+        player.gridPos = player.currentPos;
+        log(`Вы квалифицировались на P${player.gridPos}`);
+        
+        document.getElementById('btn-quali').classList.add('hidden');
+        document.getElementById('btn-race').classList.remove('hidden');
+        updateUI();
+    }
+
+    function startRace() {
+        log(`--- ГОНКА: ${calendar[currentRaceIndex]} ---`, "#ff3b3b");
+        document.getElementById('btn-race').classList.add('hidden');
+        
+        // Симуляция старта
+        let startBonus = Math.floor(Math.random() * 4) - 1; // -1 до +2
+        player.currentPos = Math.max(1, Math.min(20, player.gridPos - startBonus));
+        log(`Старт! Реакция: ${startBonus > 0 ? 'Отличная' : 'Средняя'}. Позиция: P${player.currentPos}`);
+        
+        // Гонка
+        let participants = [player, ...opponents].filter(d => d.engine >= 20);
+        participants.forEach(d => {
+            d.raceTime = 0;
+            d.dnf = false;
+            if (d.isPlayer) d.startPos = d.currentPos;
+        });
+
+        // Обработка старта (позиции)
+        let sortedStart = participants.slice().sort((a, b) => a.currentPos - b.currentPos);
+        
+        // Симуляция кругов (упрощенно 52 круга)
+        for (let lap = 1; lap <= 52; lap++) {
+            participants.forEach(d => {
+                if (d.dnf) return;
                 
-                # Если игрок, спрашиваем про замену двигателя только при пит-стопе
-                if d.is_player and d.engine_condition < 90 and d.engine_changes > 0 and not d.dnf:
-                    # Упрощенно: меняем только если совсем плохо или раз в 10 кругов
-                    pass 
-
-                # Износ двигателя
-                perf, wear_mult, spin_chance = d.get_performance("BALANCED" if d != self.player else getattr(self, 'player_mode', 'BALANCED'))
-                d.engine_condition -= wear_mult * 0.15 # Износ за круг
-                if d.engine_condition < 0: d.engine_condition = 0
+                let perf = d.getPerformance();
+                d.raceTime += (1000.0 / perf.perf) * 0.1;
+                d.engine -= perf.wear * 0.15;
+                if (d.engine < 0) d.engine = 0;
                 
-                # Спин
-                if random.random() < spin_chance:
-                    d.race_time += random.uniform(1.0, 3.0) # Потеря времени
-                    if d.is_player: print(f"  [!] Вы допустили спин на круге {lap}!")
+                if (Math.random() < perf.spin) {
+                    d.raceTime += 1.5;
+                    if (d.isPlayer) log(`Спин на круге ${lap}! Потеря времени.`, "#ffaa00");
+                }
                 
-                # DNF (поломка)
-                if d.engine_condition < 5 and random.random() < 0.01:
-                    d.dnf = True
-                    if d.is_player: print(f"  [!] ВЫ СОШЛИ С ДИСТАНЦИИ из-за поломки двигателя!")
+                if (d.engine < 5 && Math.random() < 0.01) {
+                    d.dnf = true;
+                    if (d.isPlayer) log(`СХОД! Двигатель отказал.`, "#ff3b3b");
+                }
+            });
             
-            # Симуляция обгонов
-            # Сортируем по времени + производительности
-            current_times = []
-            for d in participants:
-                if d.dnf: continue
-                perf, _, _ = d.get_performance("BALANCED" if d != self.player else getattr(self, 'player_mode', 'BALANCED'))
-                d.race_time += (1000.0 / perf) * 0.1 # Время круга
-                current_times.append((d, d.race_time))
-            
-            current_times.sort(key=lambda x: x[1])
-            
-            # Обновляем позиции (упрощенно)
-            for i, (d, t) in enumerate(current_times):
-                d.current_pos = i + 1
-                
-            # Safety Car (DNF триггерит)
-            if not safety_car_active and any(d.dnf for d in participants) and random.random() < 0.3:
-                safety_car_active = True
-                sc_laps = 3
-                print(f"\n  [SC] Выехал Safety Car на круге {lap}!")
-            
-            if safety_car_active:
-                sc_laps -= 1
-                if sc_laps <= 0:
-                    safety_car_active = False
-                    print("  [SC] Safety Car покидает трассу.")
+            // Обновление позиций
+            let active = participants.filter(d => !d.dnf).sort((a, b) => a.raceTime - b.raceTime);
+            active.forEach((d, i) => d.currentPos = i + 1);
+        }
 
-        # Финиш
-        print("\n" + "=" * 40)
-        print("ФИНИШ!")
+        // Финиш
+        let final = participants.filter(d => !d.dnf).sort((a, b) => a.raceTime - b.raceTime);
         
-        final_results = [d for d in participants if not d.dnf]
-        final_results.sort(key=lambda x: x.race_time)
-        
-        # Записываем результаты
-        self.player.races += 1
-        for i, d in enumerate(final_results):
-            pos = i + 1
-            if pos == 1: 
-                d.wins += 1
-                self.player.trophies.add(self.calendar[self.current_race_index])
-            if pos <= 3: d.podiums += 1
+        player.races = (player.races || 0) + 1;
+        final.forEach((d, i) => {
+            let pos = i + 1;
+            if (pos === 1) d.wins++;
+            if (pos <= 3) d.podiums++;
             
-            # Очки (система 25-18-15-12-10-8-6-4-2-1)
-            points_map = {1:25, 2:18, 3:15, 4:12, 5:10, 6:8, 7:6, 8:4, 9:2, 10:1}
-            d.points += points_map.get(pos, 0)
-            
-            if d.is_player:
-                print(f"Вы финишировали на {pos} позиции!")
-                if pos == 1: print("ПОБЕДА! Трофей добавлен в комнату трофеев.")
+            let points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1][pos - 1] || 0;
+            d.points += points;
+        });
         
-        # Показать результаты топ-10
-        print("\nРезультаты гонки:")
-        for i, d in enumerate(final_results[:10], 1):
-            print(f"{i}. {d.name} ({d.team})")
+        let pPos = final.findIndex(d => d.isPlayer) + 1;
+        log(`ФИНИШ! Вы закончили гонку на P${pPos}`, pPos <= 3 ? "#00ff88" : "white");
         
-        # DNF
-        for d in participants:
-            if d.dnf:
-                d.dnfs += 1
-                if d.is_player: print("Вы сошли с дистанции.")
+        if (pPos === 1) log("🏆 ПОБЕДА! Вы лучший на этой трассе!", "#ffaa00");
+        
+        // Проверка замены двигателя
+        if (player.engine < 90 && player.engineChanges > 0) {
+            log(`Внимание: Двигатель изношен (${player.engine.toFixed(0)}%). Осталось замен: ${player.engineChanges}`, "#ffaa00");
+        } else if (player.engine < 60) {
+            log("Критический износ двигателя! Машина теряет скорость.", "#ff3b3b");
+        }
 
-    def check_engine_replacement(self):
-        print(f"\nСостояние двигателя: {self.player.engine_condition:.1f}%")
-        print(f"Доступно замен: {self.player.engine_changes}")
-        
-        if self.player.engine_condition < 90 and self.player.engine_changes > 0:
-            choice = input("Заменить двигатель перед гонкой? (y/n): ").lower()
-            if choice == 'y':
-                self.player.engine_condition = 100.0
-                self.player.engine_changes -= 1
-                print("Двигатель заменен! Состояние восстановлено до 100%.")
+        document.getElementById('btn-next').classList.remove('hidden');
+        updateUI();
+    }
 
-    def show_stats(self):
-        print("\n" + "=" * 40)
-        print("СТАТИСТИКА И ДОСТИЖЕНИЯ (GOAT STATUS)")
-        print("=" * 40)
-        p = self.player
-        print(f"Пилот: {p.name} ({p.nationality})")
-        print(f"Возраст: {p.age} лет | Команда: {p.team}")
-        print(f"Гонок: {p.races} | Побед: {p.wins} | Подиумов: {p.podiums} | Поулов: {p.poles}")
-        print(f"Очки в сезоне: {p.points}")
-        print(f"GOAT Score: {p.get_goat_score()}")
-        print("\nTrophy Room (Трофеи за трассы):")
-        if p.trophies:
-            for t in p.trophies: print(f" - {t}")
-        else:
-            print(" Пока нет трофеев.")
-        print("=" * 40)
-
-    def run(self):
-        self.setup_game()
+    function nextRace() {
+        // Замена двигателя между гонками (упрощенно)
+        if (player.engine < 90 && player.engineChanges > 0) {
+            if (confirm(`Состояние двигателя: ${player.engine.toFixed(0)}%. Заменить двигатель? (Осталось: ${player.engineChanges})`)) {
+                player.engine = 100;
+                player.engineChanges--;
+                log("Двигатель заменен! Мощность восстановлена.", "#00ff88");
+            }
+        }
         
-        while self.current_race_index < len(self.calendar):
-            print(f"\n\n>>> ЭТАП {self.current_race_index + 1}/{len(self.calendar)}: {self.calendar[self.current_race_index]} <<<")
-            
-            # Меню перед гонкой
-            print("\n1. Квалификация")
-            print("2. Заменить двигатель")
-            print("3. Посмотреть таблицу")
-            print("4. Статистика пилота")
-            print("5. Пропустить этап (симуляция ИИ)")
-            
-            choice = input("Ваш выбор: ")
-            
-            if choice == '1':
-                self.handle_qualifying()
-                input("\nНажмите Enter, чтобы начать гонку...")
-                self.simulate_race()
-                self.current_race_index += 1
-            elif choice == '2':
-                self.check_engine_replacement()
-            elif choice == '3':
-                self.display_standings()
-            elif choice == '4':
-                self.show_stats()
-            elif choice == '5':
-                print("Симуляция этапа...")
-                # Быстрая симуляция для ИИ
-                self.player.races += 1
-                # Игрок просто финиширует в середине
-                self.player.points += random.randint(0, 5)
-                self.current_race_index += 1
-            else:
-                print("Неверный выбор.")
-        
-        print("\n\n" + "=" * 60)
-        print("СЕЗОН ЗАВЕРШЕН!")
-        self.display_standings()
-        self.show_stats()
-        print("Спасибо за игру!")
+        currentRaceIndex++;
+        if (currentRaceIndex >= calendar.length) {
+            log("--- СЕЗОН ЗАВЕРШЕН! ---", "#ff3b3b");
+            log(`Ваши очки: ${player.points} | Победы: ${player.wins} | Подиумы: ${player.podiums}`, "#ffaa00");
+            document.getElementById('btn-next').disabled = true;
+            return;
+        }
 
-if __name__ == "__main__":
-    game = F1Game()
-    game.run()
+        player.currentPos = 1; // Сброс для квалы
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('btn-quali').classList.remove('hidden');
+        document.getElementById('race-log').innerHTML = ''; // Очистка лога
+        log(`--- СЛЕДУЮЩИЙ ЭТАП: ${calendar[currentRaceIndex]} ---`);
+        updateUI();
+    }
+</script>
+</body>
+            </html>
