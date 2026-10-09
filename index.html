@@ -1,1 +1,454 @@
+import random
+import time
+import sys
 
+class Driver:
+    def __init__(self, name, nationality, age, team, is_player=False):
+        self.name = name
+        self.nationality = nationality
+        self.age = age
+        self.team = team
+        self.is_player = is_player
+        
+        # Статистика
+        self.points = 0
+        self.wins = 0
+        self.podiums = 0
+        self.poles = 0
+        self.fastest_laps = 0
+        self.dnfs = 0
+        self.races = 0
+        self.trophies = set() # Для Trophy Room
+        
+        # Двигатель
+        self.engine_condition = 100.0 # 0-100
+        self.engine_changes = 3 # Доступно замен (всего 4 двигателя на сезон)
+        
+        # Характеристики (зависят от возраста)
+        if 18 <= age <= 20:
+            self.skill = random.randint(65, 75)
+            self.consistency = random.randint(55, 70)
+            self.aggression = random.randint(75, 90)
+        elif 21 <= age <= 25:
+            self.skill = random.randint(75, 85)
+            self.consistency = random.randint(70, 80)
+            self.aggression = random.randint(65, 80)
+        elif 26 <= age <= 30:
+            self.skill = random.randint(85, 95)
+            self.consistency = random.randint(80, 90)
+            self.aggression = random.randint(60, 75)
+        elif 31 <= age <= 35:
+            self.skill = random.randint(80, 90)
+            self.consistency = random.randint(85, 95)
+            self.aggression = random.randint(55, 70)
+        elif 36 <= age <= 40:
+            self.skill = random.randint(75, 85)
+            self.consistency = random.randint(88, 98)
+            self.aggression = random.randint(50, 65)
+        else: # 41-50
+            self.skill = random.randint(65, 80)
+            self.consistency = random.randint(85, 95)
+            self.aggression = random.randint(40, 55)
+
+    def get_performance(self, mode="BALANCED"):
+        # 1. Влияние режима
+        if mode == "SAFE":
+            speed_mult = 0.92
+            wear_mult = 0.5
+            spin_chance = 0.01
+        elif mode == "AGGRESSIVE":
+            speed_mult = 1.10
+            wear_mult = 2.0
+            spin_chance = 0.08
+        else: # BALANCED
+            speed_mult = 1.0
+            wear_mult = 1.0
+            spin_chance = 0.03
+
+        # 2. Влияние двигателя (Engine Management)
+        engine_mod = self.engine_condition / 100.0
+        if engine_mod < 0.6:
+            # Критическое падение мощности ниже 60%
+            engine_mod = 0.5 + (engine_mod - 0.6) * 0.5
+        
+        # 3. Базовый расчет скорости
+        base_speed = (self.skill * 0.7 + self.consistency * 0.3) * speed_mult * engine_mod
+        
+        # 4. Возрастной фактор (пик формы в 25-30)
+        if self.age < 22: age_mod = 0.95
+        elif self.age > 35: age_mod = 1.0 - (self.age - 35) * 0.015
+        else: age_mod = 1.0
+
+        # 5. Случайность
+        randomness = random.uniform(0.9, 1.1)
+        
+        return max(10, base_speed * randomness * age_mod), wear_mult, spin_chance
+
+    def get_goat_score(self):
+        # Очки для GOAT Status (как в оригинальной игре)
+        return (self.wins * 50) + (self.podiums * 20) + (self.poles * 10) + self.points
+
+class F1Game:
+    def __init__(self):
+        self.player = None
+        self.drivers = []
+        self.calendar = [
+            "Бахрейн", "Саудовская Аравия", "Австралия", "Япония", "Китай",
+            "Майами", "Эмилия-Романья", "Монако", "Канада", "Испания",
+            "Австрия", "Великобритания", "Венгрия", "Бельгия", "Нидерланды",
+            "Италия", "Азербайджан", "Сингапур", "США", "Мексика",
+            "Бразилия", "Лас-Вегас", "Катар", "Абу-Даби"
+        ]
+        self.current_race_index = 0
+        self.rival = None
+
+    def setup_game(self):
+        print("=" * 60)
+        print("MOTORSPORT RACER CAREER 2026 (Текстовый симулятор)")
+        print("=" * 60)
+        
+        name = input("Введите имя вашего пилота: ")
+        
+        print("\nВыберите национальность:")
+        nationalities = ["Россия", "Германия", "Великобритания", "Италия", "Франция", 
+                         "Испания", "Нидерланды", "Монако", "Бразилия", "США", 
+                         "Япония", "Австралия", "Канада", "Мексика", "Финляндия"]
+        for i, nat in enumerate(nationalities, 1):
+            print(f"{i}. {nat}")
+        while True:
+            try:
+                nat_choice = int(input("Ваш выбор (1-15): ")) - 1
+                if 0 <= nat_choice < len(nationalities):
+                    nationality = nationalities[nat_choice]
+                    break
+                else: print("Неверный выбор.")
+            except ValueError: print("Введите число.")
+        
+        while True:
+            try:
+                age = int(input("\nВведите ваш возраст (18-50): "))
+                if 18 <= age <= 50: break
+                else: print("Возраст должен быть от 18 до 50 лет.")
+            except ValueError: print("Введите число.")
+        
+        print("\nВыберите команду (уровень машины):")
+        teams = {
+            "Red Bull": 95, "Ferrari": 94, "Mercedes": 93, "McLaren": 92,
+            "Aston Martin": 88, "Alpine": 85, "Williams": 84, "RB": 82,
+            "Haas": 80, "Sauber": 78
+        }
+        team_list = list(teams.keys())
+        for i, team in enumerate(team_list, 1):
+            print(f"{i}. {team} (Рейтинг: {teams[team]})")
+        
+        while True:
+            try:
+                team_choice = int(input("Ваш выбор (1-10): ")) - 1
+                if 0 <= team_choice < len(team_list):
+                    team = team_list[team_choice]
+                    break
+                else: print("Неверный выбор.")
+            except ValueError: print("Введите число.")
+
+        self.player = Driver(name, nationality, age, team, is_player=True)
+        self.player.team_rating = teams[team]
+        
+        # Генерация пилотов соперников
+        ai_names = [
+            "Макс Ферстаппен", "Льюис Хэмилтон", "Шарль Леклер", "Ландо Норрис",
+            "Оскар Пиастри", "Джордж Расселл", "Карлос Сайнс", "Фернандо Алонсо",
+            "Лэнс Стролл", "Пьер Гасли", "Эстебан Окон", "Александр Албон",
+            "Юки Цунода", "Даниэль Риккардо", "Валттери Боттас", "Гуаньюй Чжоу",
+            "Кевин Магнуссен", "Нико Хюлькенберг", "Логан Сарджент", "Серхио Перес"
+        ]
+        random.shuffle(ai_names)
+        
+        for i, name_ai in enumerate(ai_names[:10]):
+            # Выбираем команду, отличную от команды игрока
+            available_teams = [t for t in team_list if t != team]
+            ai_team = random.choice(available_teams)
+            ai_age = random.randint(18, 45)
+            ai_nat = random.choice(nationalities)
+            ai_driver = Driver(name_ai, ai_nat, ai_age, ai_team, is_player=False)
+            ai_driver.team_rating = teams.get(ai_team, 80)
+            # Буст топ-пилотам
+            if name_ai in ["Макс Ферстаппен", "Льюис Хэмилтон", "Шарль Леклер", "Ландо Норрис"]:
+                ai_driver.skill += 8
+                ai_driver.consistency += 5
+            self.drivers.append(ai_driver)
+
+        # Назначение сезонного соперника (Season Rivalry)
+        self.rival = random.choice(self.drivers)
+        
+        print(f"\nДобро пожаловать, {name} ({nationality}), {age} лет, команда {team}!")
+        print(f"Ваш сезонный соперник: {self.rival.name} из команды {self.rival.team}!")
+        print("Ваша карьера начинается!")
+
+    def display_standings(self):
+        print("\n" + "=" * 70)
+        print("ТАБЛИЦА ЛИЧНОГО ЗАЧЕТА")
+        print("=" * 70)
+        print(f"{'Поз':<4} {'Пилот':<22} {'Команда':<15} {'Очки':<6} {'Победы':<6}")
+        print("-" * 70)
+        sorted_drivers = sorted(self.drivers + [self.player], key=lambda x: x.points, reverse=True)
+        for i, d in enumerate(sorted_drivers, 1):
+            marker = "  <-- ВЫ" if d.is_player else ("  <-- Соперник" if d == self.rival else "")
+            print(f"{i:<4} {d.name:<22} {d.team:<15} {d.points:<6} {d.wins:<6}{marker}")
+        print("=" * 70)
+
+    def handle_qualifying(self):
+        print("\n" + "=" * 40)
+        print(f"КВАЛИФИКАЦИЯ: {self.calendar[self.current_race_index]}")
+        print("=" * 40)
+        
+        results = []
+        for d in self.drivers + [self.player]:
+            if d.engine_condition < 20:
+                print(f"{d.name} не может участвовать из-за состояния двигателя!")
+                continue
+            base_time = 90.0 - (d.skill * 0.2) + (100 - d.engine_condition) * 0.1
+            random_lap = random.uniform(0.1, 0.8)
+            final_time = base_time + random_lap
+            results.append((d, final_time))
+        
+        results.sort(key=lambda x: x[1])
+        
+        print("\nРезультаты квалификации (Топ-10):")
+        for i, (d, time) in enumerate(results, 1):
+            if i <= 10:
+                print(f"{i}. {d.name} ({d.team}) - {time:.3f} сек")
+            if i == 1: d.poles += 1
+        
+        self.player.grid_position = next(i for i, (d, _) in enumerate(results, 1) if d.is_player)
+        print(f"\nВы стартуете с {self.player.grid_position} позиции.")
+        return results
+
+    def handle_race_start(self):
+        print("\n" + "=" * 40)
+        print("СТАРТ ГОНКИ! Приготовьтесь...")
+        print("=" * 40)
+        time.sleep(1)
+        for i in range(3, 0, -1):
+            print(f"{i}...")
+            time.sleep(1)
+        
+        start_time = time.time()
+        input(">>> НАЖМИТЕ ENTER! <<<")
+        reaction_time = time.time() - start_time
+        
+        if reaction_time < 0.2:
+            print(f"Реакция: {reaction_time:.3f} сек. Отличный старт!")
+            bonus = 3
+        elif reaction_time < 0.4:
+            print(f"Реакция: {reaction_time:.3f} сек. Хороший старт.")
+            bonus = 1
+        elif reaction_time < 0.7:
+            print(f"Реакция: {reaction_time:.3f} сек. Средний старт.")
+            bonus = 0
+        else:
+            print(f"Реакция: {reaction_time:.3f} сек. Плохой старт! Потеря позиций.")
+            bonus = -2
+            
+        self.player.start_bonus = bonus
+        print(f"Стартовый бонус: {bonus} позиций")
+
+    def simulate_race(self):
+        print("\n" + "=" * 40)
+        print(f"ГОНКА: {self.calendar[self.current_race_index]}")
+        print("=" * 40)
+        
+        self.handle_race_start()
+        
+        # Собираем всех участников
+        participants = self.drivers + [self.player]
+        
+        # Стартовые позиции
+        start_order = sorted(participants, key=lambda x: getattr(x, 'grid_position', 99))
+        
+        # Учет стартового бонуса игрока
+        p_idx = start_order.index(self.player)
+        new_idx = max(0, min(len(start_order)-1, p_idx - self.player.start_bonus))
+        start_order.pop(p_idx)
+        start_order.insert(new_idx, self.player)
+        
+        # Начальные позиции
+        for i, d in enumerate(start_order):
+            d.current_pos = i + 1
+            d.race_time = 0.0
+            d.dnf = False
+        
+        # Симуляция гонки
+        laps = 52
+        safety_car_active = False
+        sc_laps = 0
+        
+        print("\nСимуляция гонки...")
+        for lap in range(1, laps + 1):
+            # Выбор режима для игрока (упрощенно, раз в 10 кругов или при SC)
+            if d.is_player and (lap % 10 == 1 or safety_car_active):
+                if not safety_car_active:
+                    print(f"\nКруг {lap}. Ваша позиция: {d.current_pos}")
+                    mode_choice = input("Выберите режим (S - Safe, B - Balanced, A - Aggressive): ").upper()
+                    if mode_choice not in ['S', 'B', 'A']:
+                        mode_choice = 'B'
+                    self.player_mode = "SAFE" if mode_choice == 'S' else ("AGGRESSIVE" if mode_choice == 'A' else "BALANCED")
+            
+            # Обработка пит-стопов и замены двигателя
+            for d in participants:
+                if d.dnf: continue
+                
+                # Если игрок, спрашиваем про замену двигателя только при пит-стопе
+                if d.is_player and d.engine_condition < 90 and d.engine_changes > 0 and not d.dnf:
+                    # Упрощенно: меняем только если совсем плохо или раз в 10 кругов
+                    pass 
+
+                # Износ двигателя
+                perf, wear_mult, spin_chance = d.get_performance("BALANCED" if d != self.player else getattr(self, 'player_mode', 'BALANCED'))
+                d.engine_condition -= wear_mult * 0.15 # Износ за круг
+                if d.engine_condition < 0: d.engine_condition = 0
+                
+                # Спин
+                if random.random() < spin_chance:
+                    d.race_time += random.uniform(1.0, 3.0) # Потеря времени
+                    if d.is_player: print(f"  [!] Вы допустили спин на круге {lap}!")
+                
+                # DNF (поломка)
+                if d.engine_condition < 5 and random.random() < 0.01:
+                    d.dnf = True
+                    if d.is_player: print(f"  [!] ВЫ СОШЛИ С ДИСТАНЦИИ из-за поломки двигателя!")
+            
+            # Симуляция обгонов
+            # Сортируем по времени + производительности
+            current_times = []
+            for d in participants:
+                if d.dnf: continue
+                perf, _, _ = d.get_performance("BALANCED" if d != self.player else getattr(self, 'player_mode', 'BALANCED'))
+                d.race_time += (1000.0 / perf) * 0.1 # Время круга
+                current_times.append((d, d.race_time))
+            
+            current_times.sort(key=lambda x: x[1])
+            
+            # Обновляем позиции (упрощенно)
+            for i, (d, t) in enumerate(current_times):
+                d.current_pos = i + 1
+                
+            # Safety Car (DNF триггерит)
+            if not safety_car_active and any(d.dnf for d in participants) and random.random() < 0.3:
+                safety_car_active = True
+                sc_laps = 3
+                print(f"\n  [SC] Выехал Safety Car на круге {lap}!")
+            
+            if safety_car_active:
+                sc_laps -= 1
+                if sc_laps <= 0:
+                    safety_car_active = False
+                    print("  [SC] Safety Car покидает трассу.")
+
+        # Финиш
+        print("\n" + "=" * 40)
+        print("ФИНИШ!")
+        
+        final_results = [d for d in participants if not d.dnf]
+        final_results.sort(key=lambda x: x.race_time)
+        
+        # Записываем результаты
+        self.player.races += 1
+        for i, d in enumerate(final_results):
+            pos = i + 1
+            if pos == 1: 
+                d.wins += 1
+                self.player.trophies.add(self.calendar[self.current_race_index])
+            if pos <= 3: d.podiums += 1
+            
+            # Очки (система 25-18-15-12-10-8-6-4-2-1)
+            points_map = {1:25, 2:18, 3:15, 4:12, 5:10, 6:8, 7:6, 8:4, 9:2, 10:1}
+            d.points += points_map.get(pos, 0)
+            
+            if d.is_player:
+                print(f"Вы финишировали на {pos} позиции!")
+                if pos == 1: print("ПОБЕДА! Трофей добавлен в комнату трофеев.")
+        
+        # Показать результаты топ-10
+        print("\nРезультаты гонки:")
+        for i, d in enumerate(final_results[:10], 1):
+            print(f"{i}. {d.name} ({d.team})")
+        
+        # DNF
+        for d in participants:
+            if d.dnf:
+                d.dnfs += 1
+                if d.is_player: print("Вы сошли с дистанции.")
+
+    def check_engine_replacement(self):
+        print(f"\nСостояние двигателя: {self.player.engine_condition:.1f}%")
+        print(f"Доступно замен: {self.player.engine_changes}")
+        
+        if self.player.engine_condition < 90 and self.player.engine_changes > 0:
+            choice = input("Заменить двигатель перед гонкой? (y/n): ").lower()
+            if choice == 'y':
+                self.player.engine_condition = 100.0
+                self.player.engine_changes -= 1
+                print("Двигатель заменен! Состояние восстановлено до 100%.")
+
+    def show_stats(self):
+        print("\n" + "=" * 40)
+        print("СТАТИСТИКА И ДОСТИЖЕНИЯ (GOAT STATUS)")
+        print("=" * 40)
+        p = self.player
+        print(f"Пилот: {p.name} ({p.nationality})")
+        print(f"Возраст: {p.age} лет | Команда: {p.team}")
+        print(f"Гонок: {p.races} | Побед: {p.wins} | Подиумов: {p.podiums} | Поулов: {p.poles}")
+        print(f"Очки в сезоне: {p.points}")
+        print(f"GOAT Score: {p.get_goat_score()}")
+        print("\nTrophy Room (Трофеи за трассы):")
+        if p.trophies:
+            for t in p.trophies: print(f" - {t}")
+        else:
+            print(" Пока нет трофеев.")
+        print("=" * 40)
+
+    def run(self):
+        self.setup_game()
+        
+        while self.current_race_index < len(self.calendar):
+            print(f"\n\n>>> ЭТАП {self.current_race_index + 1}/{len(self.calendar)}: {self.calendar[self.current_race_index]} <<<")
+            
+            # Меню перед гонкой
+            print("\n1. Квалификация")
+            print("2. Заменить двигатель")
+            print("3. Посмотреть таблицу")
+            print("4. Статистика пилота")
+            print("5. Пропустить этап (симуляция ИИ)")
+            
+            choice = input("Ваш выбор: ")
+            
+            if choice == '1':
+                self.handle_qualifying()
+                input("\nНажмите Enter, чтобы начать гонку...")
+                self.simulate_race()
+                self.current_race_index += 1
+            elif choice == '2':
+                self.check_engine_replacement()
+            elif choice == '3':
+                self.display_standings()
+            elif choice == '4':
+                self.show_stats()
+            elif choice == '5':
+                print("Симуляция этапа...")
+                # Быстрая симуляция для ИИ
+                self.player.races += 1
+                # Игрок просто финиширует в середине
+                self.player.points += random.randint(0, 5)
+                self.current_race_index += 1
+            else:
+                print("Неверный выбор.")
+        
+        print("\n\n" + "=" * 60)
+        print("СЕЗОН ЗАВЕРШЕН!")
+        self.display_standings()
+        self.show_stats()
+        print("Спасибо за игру!")
+
+if __name__ == "__main__":
+    game = F1Game()
+    game.run()
