@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>F1 Career</title>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F1 Career</title>
 <style>
 :root{--bg:#0b0b0d;--c:#17171a;--r:#b0242f;--g:#6f9a8a;--y:#e0a33a;--m:#8a8a92}
 *{box-sizing:border-box}
@@ -29,93 +33,266 @@ input,select{font:inherit;width:100%;padding:10px;border-radius:10px;background:
 .big.go{background:var(--g);border-color:var(--g);color:#fff}
 .st{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.st div{background:#0f0f11;border-radius:10px;padding:8px}
 .up{color:#6c9}.dn{color:#d55}
-</style></head><body><div id="app"></div>
+</style>
+</head>
+<body>
+<div id="app"></div>
 <script>
-const $=s=>document.querySelector(s),app=$('#app'),R=Math.random,rnd=(a,b)=>a+R()*(b-a),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
-const NAT=[["Россия","🇷🇺"],["Великобритания","🇬🇧"],["Германия","🇩🇪"],["Нидерланды","🇳🇱"],["Испания","🇪🇸"],["Италия","🇮🇹"],["Франция","🇫🇷"],["Финляндия","🇫🇮"],["Бразилия","🇧🇷"],["Австралия","🇦🇺"],["Канада","🇨🇦"],["США","🇺🇸"],["Мексика","🇲🇽"],["Япония","🇯🇵"],["Китай","🇨🇳"],["Таиланд","🇹🇭"],["Дания","🇩🇰"],["Монако","🇲🇨"],["Польша","🇵🇱"],["Венгрия","🇭🇺"],["Украина","🇺🇦"],["Беларусь","🇧🇾"],["Казахстан","🇰🇿"],["Аргентина","🇦🇷"],["Швеция","🇸🇪"],["Австрия","🇦🇹"],["Бельгия","🇧🇪"],["Индия","🇮🇳"],["Турция","🇹🇷"],["Новая Зеландия","🇳🇿"]];
-const TR=[["Австралия","🇦🇺"],["Китай","🇨🇳"],["Япония","🇯🇵"],["Бахрейн","🇧🇭"],["Саудовская Аравия","🇸🇦"],["Майами","🇺🇸"],["Монако","🇲🇨"],["Испания","🇪🇸"],["Канада","🇨🇦"],["Австрия","🇦🇹"],["Венгрия","🇭🇺"],["Бельгия","🇧🇪"],["Нидерланды","🇳🇱"],["Италия","🇮🇹"],["Азербайджан","🇦🇿"],["Сингапур","🇸🇬"],["США","🇺🇸"],["Мексика","🇲🇽"],["Бразилия","🇧🇷"],["Абу-Даби","🇦🇪"]];
-const TEAMS=[["Red Arrow","#c33",92],["Silver Wolf","#9ab",90],["Blue Bull","#35c",88],["Orange Fox","#e83",86],["Green Tide","#2a7",80],["Navy Star","#34a",76],["Gold Hawk","#cb4",72],["Pink Jet","#e6a",68],["Teal Fin","#3aa",64],["Grey Ghost","#888",60],["Black Moth","#555",56]];
-const CODES="VOR KRA MEN DUB SOL ARN BEL CAR DEN EVR FIN GRO HAL IVA JAN KOV LAR MOR NIK OST PAV".split(' ');
-const PTS=[25,18,15,12,10,8,6,4,2,1],WEAR=[.08,.16,.3],MM=[.94,1,1.06],COST=[2,8,5];
-let G,C,me,Q,Rc,ph=0,tgo=0,iv1,to1;
-const skillAge=a=>a<=30?58+(a-18):70-Math.max(0,a-33)*1.5;
-const save=()=>{try{localStorage.setItem('f1c',JSON.stringify(G))}catch(e){}};
-const perf=c=>c.skill*.4+c.car*.4+(50+cl(c.eng,0,100)/2)*MM[c.mode]*.2;
-const standing=()=>[...G.ai.map(d=>d.code),G.code].sort((a,b)=>(G.pts[b]||0)-(G.pts[a]||0));
-const hdr=()=>{const T=TR[G.race];return`<div class=hd><div>${T[1]} <b>${T[0]}</b><br><span>Гонка ${G.race+1}/20 · сезон ${G.season}</span></div><span>Обгоны: сложно</span></div>`};
-const pill=e=>`<div class=pl style="${e>=80?'color:var(--g);border-color:#2f4a40':''}">⚡${Math.round(e)}</div>`;
-const row=(p,c,gap,cls='',ch='')=>`<div class="row ${c.me?'me':''} ${cls}"><span>${p}</span><i style="background:${c.col}"></i><span>${c.code}</span>${pill(c.eng)}<span>${ch}</span><span class=gp>${gap}</span></div>`;
+// --- Утилиты ---
+const $ = s => document.querySelector(s);
+const R = Math.random;
+const rnd = (a, b) => a + R() * (b - a);
+const cl = (v, a, b) => Math.max(a, Math.min(b, v));
 
-function menu(){let s=null;try{s=localStorage.getItem('f1c')}catch(e){}
-app.innerHTML=`<h1>🏁 F1 Career</h1><p class=m>Карьера пилота Формулы-1. Выбери возраст от 18 до 50 и страну, управляй двигателем, выигрывай сезоны.</p>${s?'<button class=b onclick=load()>Продолжить карьеру</button>':''}<button class=b style="background:#26262b;border-color:#333" onclick=create()>Новая карьера</button>`}
-function load(){try{G=JSON.parse(localStorage.getItem('f1c'));hub()}catch(e){create()}}
-function create(){app.innerHTML=`<h1>Новый пилот</h1><div class=card><label>Имя</label><input id=nm value="Алекс Иванов"><label>Возраст: <b id=av>25</b></label><input type=range id=ag min=18 max=50 value=25 oninput="hint()"><p class=m id=ht></p><label>Национальность</label><select id=nt>${NAT.map((n,i)=>`<option value=${i}>${n[1]} ${n[0]}</option>`).join('')}</select><button class=b onclick=begin()>Начать карьеру</button></div>`;hint()}
-function hint(){const a=+$('#ag').value;$('#av').textContent=a;$('#ht').textContent=`Скорость ${skillAge(a).toFixed(0)}. `+(a<27?'Молодой: быстро растёт.':a<=33?'Пик формы.':'Опытный, но скорость падает — нужны тренировки.')}
-function begin(){const a=+$('#ag').value,n=NAT[$('#nt').value],name=($('#nm').value.replace(/[<>&]/g,'').trim()||'Пилот');
-let code=name.replace(/[^a-zа-яё]/gi,'').slice(0,3).toUpperCase()||'YOU';if(CODES.includes(code))code='YOU';
-G={name,age:a,flag:n[1],nat:n[0],code,skill:skillAge(a),money:3,eng:100,carUp:0,team:10,race:0,season:1,pts:{},w:0,pod:0,titles:0,h:[0,0],tr:TEAMS.map(t=>t[2]),ai:CODES.map(c=>({code:c,skill:Math.round(rnd(62,92)),team:0}))};
-assign();hub()}
-function assign(){const s=[];TEAMS.forEach((t,i)=>s.push(i,i));s.splice(s.indexOf(G.team),1);G.ai.forEach((d,i)=>d.team=s[i]);
-const p=G.ai.filter(d=>d.team>=G.team-3&&d.team<=G.team);G.rival=(p.length?p:G.ai)[Math.floor(R()*(p.length||G.ai.length))].code;G.h=[0,0]}
-const myCar=()=>G.tr[G.team]+G.carUp;
-function cars(){const cs=G.ai.map(d=>({code:d.code,col:TEAMS[d.team][1],skill:d.skill,car:G.tr[d.team],eng:90,mode:1,ai:1,t:0}));
-me={code:G.code,col:'#fff',skill:G.skill,car:myCar(),eng:G.eng,mode:1,me:1,t:0};cs.push(me);return cs}
+// --- Данные ---
+const NAT = [["Россия","🇷🇺"],["Великобритания","🇬🇧"],["Германия","🇩🇪"],["Нидерланды","🇳🇱"],["Испания","🇪🇸"],["Италия","🇮🇹"],["Франция","🇫🇷"],["Финляндия","🇫🇮"],["Бразилия","🇧🇷"],["Австралия","🇦🇺"],["Канада","🇨🇦"],["США","🇺🇸"],["Мексика","🇲🇽"],["Япония","🇯🇵"],["Китай","🇨🇳"],["Таиланд","🇹🇭"],["Дания","🇩🇰"],["Монако","🇲🇨"],["Польша","🇵🇱"],["Венгрия","🇭🇺"],["Украина","🇺🇦"],["Беларусь","🇧🇾"],["Казахстан","🇰🇿"],["Аргентина","🇦🇷"],["Швеция","🇸🇪"],["Австрия","🇦🇹"],["Бельгия","🇧🇪"],["Индия","🇮🇳"],["Турция","🇹🇷"],["Новая Зеландия","🇳🇿"]];
+const TR = [["Австралия","🇦🇺"],["Китай","🇨🇳"],["Япония","🇯🇵"],["Бахрейн","🇧🇭"],["Саудовская Аравия","🇸🇦"],["Майами","🇺🇸"],["Монако","🇲🇨"],["Испания","🇪🇸"],["Канада","🇨🇦"],["Австрия","🇦🇹"],["Венгрия","🇭🇺"],["Бельгия","🇧🇪"],["Нидерланды","🇳🇱"],["Италия","🇮🇹"],["Азербайджан","🇦🇿"],["Сингапур","🇸🇬"],["США","🇺🇸"],["Мексика","🇲🇽"],["Бразилия","🇧🇷"],["Абу-Даби","🇦🇪"]];
+const TEAMS = [["Red Arrow","#c33",92],["Silver Wolf","#9ab",90],["Blue Bull","#35c",88],["Orange Fox","#e83",86],["Green Tide","#2a7",80],["Navy Star","#34a",76],["Gold Hawk","#cb4",72],["Pink Jet","#e6a",68],["Teal Fin","#3aa",64],["Grey Ghost","#888",60],["Black Moth","#555",56]];
+const CODES = "VOR KRA MEN DUB SOL ARN BEL CAR DEN EVR FIN GRO HAL IVA JAN KOV LAR MOR NIK OST PAV".split(' ');
+const PTS = [25,18,15,12,10,8,6,4,2,1];
+const WEAR = [.08,.16,.3];
+const MM = [.94,1,1.06];
+const COST = [2,8,5];
 
-function hub(){save();const rk=standing().indexOf(G.code)+1;
-app.innerHTML=hdr()+`<div class=card><b>${G.flag} ${G.name}</b>, ${G.age} лет<br><span class=m>${TEAMS[G.team][0]} · соперник сезона: ${G.rival} (${G.h[0]}:${G.h[1]})</span><div class=st><div>Скорость <b>${G.skill.toFixed(1)}</b></div><div>Машина <b>${myCar().toFixed(0)}</b></div><div>Двигатель <b>${G.eng.toFixed(0)}%</b></div><div>Деньги <b>$${G.money.toFixed(1)}M</b></div><div>Чемпионат <b>P${rk}</b></div><div>Очки <b>${G.pts[G.code]||0}</b></div></div></div>
-<div class=card><b>Боксы</b><button onclick=buy(0)>Ремонт двигателя +30% — $2M</button><button onclick=buy(1)>Улучшить машину +2 — $8M</button><button onclick=buy(2)>Тренировки: скорость +1 — $5M</button></div><button class=b onclick=quali()>К квалификации</button><button onclick=menu()>В меню</button>`}
-function buy(i){if(G.money<COST[i])return alert('Не хватает денег');G.money-=COST[i];if(i==0)G.eng=Math.min(100,G.eng+30);if(i==1)G.carUp+=2;if(i==2)G.skill=Math.min(99,G.skill+1);hub()}
+// --- Состояние ---
+let G, C, me, Q, Rc, ph = 0, tgo = 0, iv1, to1;
 
-function quali(){C=cars();Q={st:0,pool:C.slice(),tails:[],res:null,mode:1,done:0};dq()}
-function dq(){const inP=Q.pool.includes(me),rs=Q.res;
-let list=rs?`<div class=tb>${rs.map((c,i)=>row(i+1,c,c.el?'ВЫЛЕТ':i?'+'+(c.q-rs[0].q).toFixed(3):'ПОУЛ',c.el?'el':'')).join('')}</div>`:'';
-let ctl;if(Q.done)ctl=`<button class=b onclick=toRace()>К гонке</button>`;
-else if(inP)ctl=`<div class=card><b>Режим двигателя</b> ${pill(me.eng)}<div class=modes>${['Безопасный','Баланс','Агрессивный'].map((n,i)=>`<button class="${['sf','','ag'][i]} ${Q.mode==i?'on':''}" onclick="Q.mode=${i};dq()">${n}</button>`).join('')}</div></div><button class=b onclick=runQ()>Запустить Q${Q.st+1}</button>`;
-else ctl=`<p class=m>Вы вылетели. Квалификация идёт без вас.</p><button class=b onclick=runQ()>Далее</button>`;
-app.innerHTML=hdr()+`<h2>${rs?'Результаты Q'+Q.st:'Квалификация'}</h2>${list}${ctl}`}
-function runQ(){const p=Q.pool,k=Q.st;if(p.includes(me)){me.eng=cl(me.eng-[.3,.6,1.2][Q.mode],0,100);G.eng=me.eng;me.mode=Q.mode}
-p.forEach(c=>c.q=80-perf(c)*.035+rnd(-.3,.3));p.sort((a,b)=>a.q-b.q);const keep=[16,10,10][k];
-p.forEach((c,i)=>c.el=k<2&&i>=keep);Q.res=p.slice();if(k<2){Q.tails.unshift(p.slice(keep));Q.pool=p.slice(0,keep)}Q.st++;Q.done=Q.st>2;dq()}
-function toRace(){Q.pool.concat(...Q.tails).forEach((c,i)=>{c.g=i;c.t=i*.25+(c.ai?rnd(0,.4):0)});seq()}
+// --- Функции ---
+const skillAge = a => a <= 30 ? 58 + (a - 18) : 70 - Math.max(0, a - 33) * 1.5;
+const save = () => { try { localStorage.setItem('f1c', JSON.stringify(G)); } catch(e){} };
+const perf = c => c.skill * .4 + c.car * .4 + (50 + cl(c.eng, 0, 100) / 2) * MM[c.mode] * .2;
+const standing = () => [...G.ai.map(d => d.code), G.code].sort((a, b) => (G.pts[b] || 0) - (G.pts[a] || 0));
+const hdr = () => { const T = TR[G.race]; return `<div class=hd><div>${T[1]} <b>${T[0]}</b><br><span>Гонка ${G.race + 1}/20 · сезон ${G.season}</span></div><span>Обгоны: сложно</span></div>`; };
+const pill = e => `<div class=pl style="${e >= 80 ? 'color:var(--g);border-color:#2f4a40' : ''}">⚡${Math.round(e)}</div>`;
+const row = (p, c, gap, cls = '', ch = '') => `<div class="row ${c.me ? 'me' : ''} ${cls}"><span>${p}</span><i style="background:${c.col}"></i><span>${c.code}</span>${pill(c.eng)}<span>${ch}</span><span class=gp>${gap}</span></div>`;
 
-function seq(){ph=0;app.innerHTML=hdr()+`<div class=lights id=L>${'<i></i>'.repeat(5)}</div><button class="big" id=gbt onclick=go()>ГОТОВ</button>`}
-function go(){const b=$('#gbt');
-if(ph==0){ph=1;b.textContent='Ждите…';let n=0;iv1=setInterval(()=>{$('#L').children[n++].classList.add('on');if(n==5){clearInterval(iv1);to1=setTimeout(()=>{ph=2;tgo=performance.now();document.querySelectorAll('#L i').forEach(e=>e.className='g');b.textContent='GO!';b.classList.add('go')},rnd(600,2600))}},700)}
-else if(ph==1){ph=3;clearInterval(iv1);clearTimeout(to1);reac(null)}
-else if(ph==2){ph=3;reac(performance.now()-tgo)}}
-function reac(ms){const pen=ms===null?1.5:ms<300?-.5:ms<600?0:ms<1000?.6:1.2;me.t+=pen;
-const lb=ms===null?'ФАЛЬСТАРТ':ms<300?'ОТЛИЧНО':ms<600?'НОРМАЛЬНО':'МЕДЛЕННО';
-app.innerHTML=hdr()+`<div style="text-align:center;margin-top:200px"><p>Реакция: ${ms===null?'—':Math.round(ms)+' мс'}</p><h1 style="font-size:44px;color:${pen>0?'#b05050':'var(--g)'}">${lb}</h1><p class=m>Поехали!</p></div>`;setTimeout(race,1600)}
+function menu() {
+    let s = null;
+    try { s = localStorage.getItem('f1c'); } catch(e){}
+    app.innerHTML = `<h1>🏁 F1 Career</h1><p class=m>Карьера пилота Формулы-1. Выбери возраст от 18 до 50 и страну, управляй двигателем, выигрывай сезоны.</p>${s ? '<button class=b onclick=load()>Продолжить карьеру</button>' : ''}<button class=b style="background:#26262b;border-color:#333" onclick=create()>Новая карьера</button>`;
+}
+function load() { try { G = JSON.parse(localStorage.getItem('f1c')); hub(); } catch(e){ create(); } }
+function create() {
+    app.innerHTML = `<h1>Новый пилот</h1><div class=card><label>Имя</label><input id=nm value="Алекс Иванов"><label>Возраст: <b id=av>25</b></label><input type=range id=ag min=18 max=50 value=25 oninput="hint()"><p class=m id=ht></p><label>Национальность</label><select id=nt>${NAT.map((n, i) => `<option value=${i}>${n[1]} ${n[0]}</option>`).join('')}</select><button class=b onclick=begin()>Начать карьеру</button></div>`;
+    hint();
+}
+function hint() {
+    const a = +$('#ag').value;
+    $('#av').textContent = a;
+    $('#ht').textContent = `Скорость ${skillAge(a).toFixed(0)}. ` + (a < 27 ? 'Молодой: быстро растёт.' : a <= 33 ? 'Пик формы.' : 'Опытный, но скорость падает — нужны тренировки.');
+}
+function begin() {
+    const a = +$('#ag').value, n = NAT[$('#nt').value], name = ($('#nm').value.replace(/[<>&]/g, '').trim() || 'Пилот');
+    let code = name.replace(/[^a-zа-яё]/gi, '').slice(0, 3).toUpperCase() || 'YOU';
+    if (CODES.includes(code)) code = 'YOU';
+    G = { name, age: a, flag: n[1], nat: n[0], code, skill: skillAge(a), money: 3, eng: 100, carUp: 0, team: 10, race: 0, season: 1, pts: {}, w: 0, pod: 0, titles: 0, h: [0, 0], tr: TEAMS.map(t => t[2]), ai: CODES.map(c => ({ code: c, skill: Math.round(rnd(62, 92)), team: 0 })) };
+    assign();
+    hub();
+}
+function assign() {
+    const s = [];
+    TEAMS.forEach((t, i) => s.push(i, i));
+    s.splice(s.indexOf(G.team), 1);
+    G.ai.forEach((d, i) => d.team = s[i]);
+    const p = G.ai.filter(d => d.team >= G.team - 3 && d.team <= G.team);
+    G.rival = (p.length ? p : G.ai)[Math.floor(R() * (p.length || G.ai.length))].code;
+    G.h = [0, 0];
+}
+const myCar = () => G.tr[G.team] + G.carUp;
 
-const order=()=>C.slice().sort((a,b)=>(a.dnf?1:0)-(b.dnf?1:0)||(a.dnf?b.dl-a.dl:a.t-b.t));
-function race(){Rc={lap:0,run:0,sp:1};
-app.innerHTML=hdr()+`<div class=card style="display:flex;align-items:center;gap:6px"><button id=pp style="width:54px;margin:0" onclick=pp()>▶</button><div style="flex:1;background:#26262b;border-radius:10px;overflow:hidden"><div id=bar style="background:var(--g);padding:10px;white-space:nowrap">Круг 0/52</div></div>${[1,2,3].map(s=>`<button class="${s==1?'on':''}" id=s${s} style="width:42px;margin:0;padding:10px 0" onclick=spd(${s})>${'»'.repeat(s)}</button>`).join('')}</div><div id=tbl></div><div class=card><div style="display:flex;justify-content:space-between;align-items:center"><b id=ps style="font-size:32px"></b><div id=en></div></div><div class=modes>${['Безопасно','Баланс','Агрессивно'].map((n,i)=>`<button id=m${i} class="${['sf','','ag'][i]} ${me.mode==i?'on':''}" onclick=sm(${i})>${n}</button>`).join('')}</div></div>`;drawR();pp()}
-function sm(i){me.mode=i;[0,1,2].forEach(j=>$('#m'+j).classList.toggle('on',j==i))}
-function pp(){if(Rc.run){clearInterval(Rc.iv);Rc.run=0;$('#pp').textContent='▶'}else{Rc.run=1;$('#pp').textContent='⏸';Rc.iv=setInterval(tick,700/Rc.sp)}}
-function spd(s){Rc.sp=s;[1,2,3].forEach(j=>$('#s'+j).classList.toggle('on',j==s));if(Rc.run){clearInterval(Rc.iv);Rc.iv=setInterval(tick,700/s)}}
-function drawR(){const o=order(),i=o.indexOf(me);
-$('#tbl').innerHTML=o.map((c,k)=>{const d=c.g-k,ch=c.dnf?'':d>0?`<span class=up>▲${d}</span>`:d<0?`<span class=dn>▼${-d}</span>`:'–';return row(k+1,c,c.dnf?'DNF':k?'+'+(c.t-o[k-1].t).toFixed(1):'ЛИДЕР','',ch)}).join('');
-$('#bar').style.width=Math.max(22,Rc.lap/52*100)+'%';$('#bar').textContent=`Круг ${Rc.lap}/52`;
-$('#ps').textContent=me.dnf?'DNF':'P'+(i+1);$('#en').innerHTML=pill(me.eng).replace('class=pl','class=pl style="font-size:20px;padding:4px 10px"')}
-function tick(){Rc.lap++;const prev=order();
-C.forEach(c=>{if(c.dnf)return;c.t+=90-perf(c)*.035+rnd(-.35,.35);if(c.me){c.eng-=WEAR[c.mode];G.eng=cl(c.eng,0,100)}
-if(c.eng<=0||(c.me&&c.mode==2&&c.eng<30&&R()<.03)||(c.ai&&R()<.0006)){c.dnf=1;c.dl=Rc.lap;if(c.me&&Rc.sp<3)spd(3)}});
-for(let i=1;i<prev.length;i++){const a=prev[i-1],c=prev[i];if(!a.dnf&&!c.dnf&&c.t<a.t&&R()<.55)c.t=a.t+.08}
-drawR();if(Rc.lap>=52)fin()}
-function fin(){clearInterval(Rc.iv);const o=order(),p=o.indexOf(me)+1;let pts=0;
-o.forEach((c,i)=>{if(!c.dnf&&i<10){G.pts[c.code]=(G.pts[c.code]||0)+PTS[i];if(c.me)pts=PTS[i]}});
-const pr=me.dnf?0:+((23-p)*.4).toFixed(1);G.money+=pr;if(!me.dnf&&p==1)G.w++;if(!me.dnf&&p<=3)G.pod++;
-const rv=o.find(c=>c.code==G.rival),win=o.indexOf(me)<o.indexOf(rv);G.h[win?0:1]++;G.eng=cl(me.eng,0,100);G.race++;save();
-app.innerHTML=`<h1>${me.dnf?'Сход с гонки':'Финиш: P'+p}</h1><div class=card>Очки: <b>+${pts}</b> · Призовые: <b>+$${pr}M</b><br><span class=m>Соперник ${G.rival}: ${win?'вы впереди':'он впереди'} (${G.h[0]}:${G.h[1]})</span></div><div class=tb>${o.map((c,i)=>row(i+1,c,c.dnf?'DNF':i?'+'+(c.t-o[0].t).toFixed(1):'ПОБЕДА')).join('')}</div><button class=b onclick="${G.race>=20?'season()':'hub()'}">${G.race>=20?'Итоги сезона':'Далее'}</button>`}
+function cars() {
+    const cs = G.ai.map(d => ({ code: d.code, col: TEAMS[d.team][1], skill: d.skill, car: G.tr[d.team], eng: 90, mode: 1, ai: 1, t: 0 }));
+    me = { code: G.code, col: '#fff', skill: G.skill, car: myCar(), eng: G.eng, mode: 1, me: 1, t: 0 };
+    cs.push(me);
+    return cs;
+}
 
-function season(){const st=standing(),rk=st.indexOf(G.code)+1;if(rk==1){G.titles++;save()}
-const t=Math.max(0,G.team-(rk<=3?3:rk<=8?2:rk<=14?1:0));
-const rows=st.map((c,i)=>({c,i})).filter(x=>x.i<10||x.c==G.code).map(x=>row(x.i+1,{code:x.c,col:x.c==G.code?'#fff':'#444',eng:0,me:x.c==G.code},(G.pts[x.c]||0)+' оч.')).join('').replace(/<div class=pl[^>]*>[^<]*<\/div>/g,'<span></span>');
-app.innerHTML=`<h1>${rk==1?'🏆 Чемпион!':'Итог сезона: P'+rk}</h1><div class=card>Победы: ${G.w} · Подиумы: ${G.pod} · Титулы: ${G.titles}<br><span class=m>Возраст ${G.age}</span></div><div class=tb>${rows}</div>${G.age>=50?'':(t<G.team?`<button class=b onclick="next(${t})">Перейти в ${TEAMS[t][0]} (машина ${G.tr[t]})</button>`:'')}${G.age>=50?'':'<button class=b onclick=next()>Следующий сезон</button>'}<button onclick=retire()>Завершить карьеру</button>`}
-function next(t){const a=G.age;G.skill=cl(G.skill+(a<27?2:a<=33?0:-1.5),40,99);G.age++;G.season++;G.race=0;G.pts={};G.w=G.w;
-G.tr=G.tr.map(v=>cl(v+rnd(-3,3),52,95));G.ai.forEach(d=>d.skill=Math.round(cl(d.skill+rnd(-2.5,2.5),60,94)));
-if(t!==undefined&&t<G.team){G.team=t;G.carUp=0}assign();hub()}
-function retire(){try{localStorage.removeItem('f1c')}catch(e){}
-app.innerHTML=`<h1>Конец карьеры</h1><div class=card>${G.flag} <b>${G.name}</b>, ${G.age} лет<br>Сезонов: ${G.season} · Титулов: <b>${G.titles}</b><br>Побед: ${G.w} · Подиумов: ${G.pod}</div><button class=b onclick=menu()>В меню</button>`}
+function hub() {
+    save();
+    const rk = standing().indexOf(G.code) + 1;
+    app.innerHTML = hdr() + `<div class=card><b>${G.flag} ${G.name}</b>, ${G.age} лет<br><span class=m>${TEAMS[G.team][0]} · соперник сезона: ${G.rival} (${G.h[0]}:${G.h[1]})</span><div class=st><div>Скорость <b>${G.skill.toFixed(1)}</b></div><div>Машина <b>${myCar().toFixed(0)}</b></div><div>Двигатель <b>${G.eng.toFixed(0)}%</b></div><div>Деньги <b>$${G.money.toFixed(1)}M</b></div><div>Чемпионат <b>P${rk}</b></div><div>Очки <b>${G.pts[G.code] || 0}</b></div></div></div>
+    <div class=card><b>Боксы</b><button onclick=buy(0)>Ремонт двигателя +30% — $2M</button><button onclick=buy(1)>Улучшить машину +2 — $8M</button><button onclick=buy(2)>Тренировки: скорость +1 — $5M</button></div><button class=b onclick=quali()>К квалификации</button><button onclick=menu()>В меню</button>`;
+}
+function buy(i) {
+    if (G.money < COST[i]) return alert('Не хватает денег');
+    G.money -= COST[i];
+    if (i == 0) G.eng = Math.min(100, G.eng + 30);
+    if (i == 1) G.carUp += 2;
+    if (i == 2) G.skill = Math.min(99, G.skill + 1);
+    hub();
+}
+
+// --- Квалификация ---
+function quali() {
+    C = cars();
+    Q = { st: 0, pool: C.slice(), tails: [], res: null, mode: 1, done: 0 };
+    dq();
+}
+function dq() {
+    const inP = Q.pool.includes(me), rs = Q.res;
+    let list = rs ? `<div class=tb>${rs.map((c, i) => row(i + 1, c, c.el ? 'ВЫЛЕТ' : i ? '+' + (c.q - rs[0].q).toFixed(3) : 'ПОУЛ', c.el ? 'el' : '')).join('')}</div>` : '';
+    let ctl;
+    if (Q.done) ctl = `<button class=b onclick=toRace()>К гонке</button>`;
+    else if (inP) ctl = `<div class=card><b>Режим двигателя</b> ${pill(me.eng)}<div class=modes>${['Безопасный', 'Баланс', 'Агрессивный'].map((n, i) => `<button class="${['sf', '', 'ag'][i]} ${Q.mode == i ? 'on' : ''}" onclick="Q.mode=${i};dq()">${n}</button>`).join('')}</div></div><button class=b onclick=runQ()>Запустить Q${Q.st + 1}</button>`;
+    else ctl = `<p class=m>Вы вылетели. Квалификация идёт без вас.</p><button class=b onclick=runQ()>Далее</button>`;
+    app.innerHTML = hdr() + `<h2>${rs ? 'Результаты Q' + Q.st : 'Квалификация'}</h2>${list}${ctl}`;
+}
+function runQ() {
+    const p = Q.pool, k = Q.st;
+    if (p.includes(me)) {
+        me.eng = cl(me.eng - [.3, .6, 1.2][Q.mode], 0, 100);
+        G.eng = me.eng;
+        me.mode = Q.mode;
+    }
+    p.forEach(c => c.q = 80 - perf(c) * .035 + rnd(-.3, .3));
+    p.sort((a, b) => a.q - b.q);
+    const keep = [16, 10, 10][k];
+    p.forEach((c, i) => c.el = k < 2 && i >= keep);
+    Q.res = p.slice();
+    if (k < 2) { Q.tails.unshift(p.slice(keep)); Q.pool = p.slice(0, keep); }
+    Q.st++;
+    Q.done = Q.st > 2;
+    dq();
+}
+function toRace() {
+    Q.pool.concat(...Q.tails).forEach((c, i) => { c.g = i; c.t = i * .25 + (c.ai ? rnd(0, .4) : 0); });
+    seq();
+}
+
+// --- Старт гонки ---
+function seq() {
+    ph = 0;
+    app.innerHTML = hdr() + `<div class=lights id=L>${'<i></i>'.repeat(5)}</div><button class="big" id=gbt onclick=go()>ГОТОВ</button>`;
+}
+function go() {
+    const b = $('#gbt');
+    if (ph == 0) {
+        ph = 1; b.textContent = 'Ждите…';
+        let n = 0;
+        iv1 = setInterval(() => {
+            $('#L').children[n++].classList.add('on');
+            if (n == 5) {
+                clearInterval(iv1);
+                to1 = setTimeout(() => {
+                    ph = 2; tgo = performance.now();
+                    document.querySelectorAll('#L i').forEach(e => e.className = 'g');
+                    b.textContent = 'GO!'; b.classList.add('go');
+                }, rnd(600, 2600));
+            }
+        }, 700);
+    } else if (ph == 1) {
+        ph = 3; clearInterval(iv1); clearTimeout(to1); reac(null);
+    } else if (ph == 2) {
+        ph = 3; reac(performance.now() - tgo);
+    }
+}
+function reac(ms) {
+    const pen = ms === null ? 1.5 : ms < 300 ? -.5 : ms < 600 ? 0 : ms < 1000 ? .6 : 1.2;
+    me.t += pen;
+    const lb = ms === null ? 'ФАЛЬСТАРТ' : ms < 300 ? 'ОТЛИЧНО' : ms < 600 ? 'НОРМАЛЬНО' : 'МЕДЛЕННО';
+    app.innerHTML = hdr() + `<div style="text-align:center;margin-top:200px"><p>Реакция: ${ms === null ? '—' : Math.round(ms) + ' мс'}</p><h1 style="font-size:44px;color:${pen > 0 ? '#b05050' : 'var(--g)'}">${lb}</h1><p class=m>Поехали!</p></div>`;
+    setTimeout(race, 1600);
+}
+
+// --- Гонка ---
+const order = () => C.slice().sort((a, b) => (a.dnf ? 1 : 0) - (b.dnf ? 1 : 0) || (a.dnf ? b.dl - a.dl : a.t - b.t));
+function race() {
+    Rc = { lap: 0, run: 0, sp: 1 };
+    app.innerHTML = hdr() + `<div class=card style="display:flex;align-items:center;gap:6px"><button id=pp style="width:54px;margin:0" onclick=pp()>▶</button><div style="flex:1;background:#26262b;border-radius:10px;overflow:hidden"><div id=bar style="background:var(--g);padding:10px;white-space:nowrap">Круг 0/52</div></div>${[1, 2, 3].map(s => `<button class="${s == 1 ? 'on' : ''}" id=s${s} style="width:42px;margin:0;padding:10px 0" onclick=spd(${s})>${'»'.repeat(s)}</button>`).join('')}</div><div id=tbl></div><div class=card><div style="display:flex;justify-content:space-between;align-items:center"><b id=ps style="font-size:32px"></b><div id=en></div></div><div class=modes>${['Безопасно', 'Баланс', 'Агрессивно'].map((n, i) => `<button id=m${i} class="${['sf', '', 'ag'][i]} ${me.mode == i ? 'on' : ''}" onclick=sm(${i})>${n}</button>`).join('')}</div></div>`;
+    drawR();
+    pp();
+}
+function sm(i) { me.mode = i; [0, 1, 2].forEach(j => $('#m' + j).classList.toggle('on', j == i)); }
+function pp() {
+    if (Rc.run) { clearInterval(Rc.iv); Rc.run = 0; $('#pp').textContent = '▶'; }
+    else { Rc.run = 1; $('#pp').textContent = '⏸'; Rc.iv = setInterval(tick, 700 / Rc.sp); }
+}
+function spd(s) {
+    Rc.sp = s;
+    [1, 2, 3].forEach(j => $('#s' + j).classList.toggle('on', j == s));
+    if (Rc.run) { clearInterval(Rc.iv); Rc.iv = setInterval(tick, 700 / s); }
+}
+function drawR() {
+    const o = order(), i = o.indexOf(me);
+    $('#tbl').innerHTML = o.map((c, k) => {
+        const d = c.g - k, ch = c.dnf ? '' : d > 0 ? `<span class=up>▲${d}</span>` : d < 0 ? `<span class=dn>▼${-d}</span>` : '–';
+        return row(k + 1, c, c.dnf ? 'DNF' : k ? '+' + (c.t - o[k - 1].t).toFixed(1) : 'ЛИДЕР', '', ch);
+    }).join('');
+    $('#bar').style.width = Math.max(22, Rc.lap / 52 * 100) + '%';
+    $('#bar').textContent = `Круг ${Rc.lap}/52`;
+    $('#ps').textContent = me.dnf ? 'DNF' : 'P' + (i + 1);
+    $('#en').innerHTML = pill(me.eng).replace('class=pl', 'class=pl style="font-size:20px;padding:4px 10px"');
+}
+function tick() {
+    Rc.lap++;
+    const prev = order();
+    C.forEach(c => {
+        if (c.dnf) return;
+        c.t += 90 - perf(c) * .035 + rnd(-.35, .35);
+        if (c.me) { c.eng -= WEAR[c.mode]; G.eng = cl(c.eng, 0, 100); }
+        if (c.eng <= 0 || (c.me && c.mode == 2 && c.eng < 30 && R() < .03) || (c.ai && R() < .0006)) {
+            c.dnf = 1; c.dl = Rc.lap;
+            if (c.me && Rc.sp < 3) spd(3);
+        }
+    });
+    for (let i = 1; i < prev.length; i++) {
+        const a = prev[i - 1], c = prev[i];
+        if (!a.dnf && !c.dnf && c.t < a.t && R() < .55) c.t = a.t + .08;
+    }
+    drawR();
+    if (Rc.lap >= 52) fin();
+}
+function fin() {
+    clearInterval(Rc.iv);
+    const o = order(), p = o.indexOf(me) + 1;
+    let pts = 0;
+    o.forEach((c, i) => {
+        if (!c.dnf && i < 10) {
+            G.pts[c.code] = (G.pts[c.code] || 0) + PTS[i];
+            if (c.me) pts = PTS[i];
+        }
+    });
+    const pr = me.dnf ? 0 : +((23 - p) * .4).toFixed(1);
+    G.money += pr;
+    if (!me.dnf && p == 1) G.w++;
+    if (!me.dnf && p <= 3) G.pod++;
+    const rv = o.find(c => c.code == G.rival), win = o.indexOf(me) < o.indexOf(rv);
+    G.h[win ? 0 : 1]++;
+    G.eng = cl(me.eng, 0, 100);
+    G.race++;
+    save();
+    app.innerHTML = `<h1>${me.dnf ? 'Сход с гонки' : 'Финиш: P' + p}</h1><div class=card>Очки: <b>+${pts}</b> · Призовые: <b>+$${pr}M</b><br><span class=m>Соперник ${G.rival}: ${win ? 'вы впереди' : 'он впереди'} (${G.h[0]}:${G.h[1]})</span></div><div class=tb>${o.map((c, i) => row(i + 1, c, c.dnf ? 'DNF' : i ? '+' + (c.t - o[0].t).toFixed(1) : 'ПОБЕДА')).join('')}</div><button class=b onclick="${G.race >= 20 ? 'season()' : 'hub()'}">${G.race >= 20 ? 'Итоги сезона' : 'Далее'}</button>`;
+}
+
+// --- Итоги сезона ---
+function season() {
+    const st = standing(), rk = st.indexOf(G.code) + 1;
+    if (rk == 1) { G.titles++; save(); }
+    const t = Math.max(0, G.team - (rk <= 3 ? 3 : rk <= 8 ? 2 : rk <= 14 ? 1 : 0));
+    const rows = st.map((c, i) => ({ c, i })).filter(x => x.i < 10 || x.c == G.code).map(x => row(x.i + 1, { code: x.c, col: x.c == G.code ? '#fff' : '#444', eng: 0, me: x.c == G.code }, (G.pts[x.c] || 0) + ' оч.')).join('').replace(/<div class=pl[^>]*>[^<]*<\/div>/g, '<span></span>');
+    app.innerHTML = `<h1>${rk == 1 ? '🏆 Чемпион!' : 'Итог сезона: P' + rk}</h1><div class=card>Победы: ${G.w} · Подиумы: ${G.pod} · Титулы: ${G.titles}<br><span class=m>Возраст ${G.age}</span></div><div class=tb>${rows}</div>${G.age >= 50 ? '' : (t < G.team ? `<button class=b onclick="next(${t})">Перейти в ${TEAMS[t][0]} (машина ${G.tr[t]})</button>` : '')}${G.age >= 50 ? '' : '<button class=b onclick=next()>Следующий сезон</button>'}<button onclick=retire()>Завершить карьеру</button>`;
+}
+function next(t) {
+    const a = G.age;
+    G.skill = cl(G.skill + (a < 27 ? 2 : a <= 33 ? 0 : -1.5), 40, 99);
+    G.age++;
+    G.season++;
+    G.race = 0;
+    G.pts = {};
+    G.w = G.w;
+    G.tr = G.tr.map(v => cl(v + rnd(-3, 3), 52, 95));
+    G.ai.forEach(d => d.skill = Math.round(cl(d.skill + rnd(-2.5, 2.5), 60, 94)));
+    if (t !== undefined && t < G.team) { G.team = t; G.carUp = 0; }
+    assign();
+    hub();
+}
+function retire() {
+    try { localStorage.removeItem('f1c'); } catch(e){}
+    app.innerHTML = `<h1>Конец карьеры</h1><div class=card>${G.flag} <b>${G.name}</b>, ${G.age} лет<br>Сезонов: ${G.season} · Титулов: <b>${G.titles}</b><br>Побед: ${G.w} · Подиумов: ${G.pod}</div><button class=b onclick=menu()>В меню</button>`;
+}
+
+// --- Запуск ---
 menu();
-</script></body></html>
+</script>
+</body>
+</html>
